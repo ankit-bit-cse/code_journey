@@ -41,4 +41,4 @@ No `npm install` needed: the tests use only what Node and Java already include.
   `isEven(4) should return true but returned false`
 - Every push and pull request runs all the tests on GitHub too (the **Actions** tab): ✅ means everything you solved is correct.
 
-Daily workflow (branch → solve → test → pull request): see [CONTRIBUTING.md](CONTRIBUTING.md).
+Branches: `ankit` (solutions) and `pappukrs` (new days) each merge into `main` through pull requests. Daily workflow: [CONTRIBUTING.md](CONTRIBUTING.md). Adding a day: [TEACHING.md](TEACHING.md).
