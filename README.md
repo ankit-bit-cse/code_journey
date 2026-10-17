@@ -1,4 +1,4 @@
-# learn-to-code
+# code-journey
 
 Learning programming one day at a time: **JavaScript** and **Java**, side by side, from the basics to advanced topics, then DSA and web development.
 
@@ -27,7 +27,7 @@ You need [Node.js](https://nodejs.org) 20+ and [Java (JDK)](https://adoptium.net
 
 ```bash
 git clone <this repo's URL>
-cd learn-to-code
+cd code-journey
 npm test              # JavaScript questions
 npm run test:java     # Java questions
 ```

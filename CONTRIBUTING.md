@@ -10,7 +10,7 @@
 2. Clone the repo and check the tests run:
    ```bash
    git clone <repo URL>
-   cd learn-to-code
+   cd code-journey
    npm test
    ```
 
