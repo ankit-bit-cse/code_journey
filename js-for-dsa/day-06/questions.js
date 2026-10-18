@@ -7,6 +7,15 @@
 // reverseString("abc") -> "cba"    reverseString("") -> ""
 // Steps: start with out = "", walk i from s.length - 1 down to 0, and add s[i] to out.
 export function reverseString(s) {
+
+  let out="";
+
+  for(let i= s.length-1;i>=0;i--){
+    out=out+s[i];
+  }
+
+  return out;
+
   throw new Error("TODO");
 }
 
@@ -15,7 +24,23 @@ export function reverseString(s) {
 // Steps: lower-case s once with toLowerCase(), then use left/right pointers like Day 5
 //   (or compare with your reverseString() from Q1).
 export function isPalindrome(s) {
-  throw new Error("TODO");
+
+
+  let reversestr="";
+
+  for(let i= s.length-1;i>=0;i--){
+   reversestr=reversestr+s[i];
+  }
+
+
+  if(reversestr.toLocaleLowerCase()===s.toLocaleLowerCase()) {
+    return true;
+  }
+  else {
+    return false;
+  }
+
+  // throw new Error("TODO");
 }
 
 // Q3. Count how many times the single character ch appears in s.
