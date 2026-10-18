@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Objects as Maps</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 7 of 10</p>
+  <h1>Objects as hash maps</h1>
+  <p class="lede">An object lets you jump straight to a value by its name, without searching. That one trick speeds up a huge number of DSA problems.</p>
+  <nav class="daynav"><a href="../day-06/concept.html">← Day 6</a><a href="../day-08/concept.html">Day 8 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Keys and values</h2>
+  <p>An object stores pairs: a <b>key</b> (the name) and a <b>value</b>.</p>
+<pre><code>const age = { ann: 31, bob: 25 };
+
+age.ann;        // 31
+age["bob"];     // 25
+age.cat;        // undefined: a missing key is not an error
+age.cat = 4;    // adds a new pair
+age.ann = 32;   // changes an existing value</code></pre>
+  <p>Think of it like an array whose indexes are words instead of 0, 1, 2.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Dot or brackets?</h2>
+  <p><code>obj.key</code> uses the key <b>written in your code</b>. <code>obj[expr]</code> works out the key first. When the key lives in a variable, you need brackets:</p>
+<pre><code>const name = "ann";
+age[name];      // 31
+age.name;       // undefined! looks for a key literally called "name"
+
+for (const ch of "hi") {
+  count[ch];    // count["h"], then count["i"]
+}</code></pre>
+  <p>To check whether a key exists, use <code>in</code>:</p>
+<pre><code>"ann" in age;   // true
+"zed" in age;   // false</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>3. The counting idiom</h2>
+  <p>The most useful line of the day:</p>
+<pre><code>count[k] = (count[k] || 0) + 1;</code></pre>
+  <p>The first time we see <code>k</code>, <code>count[k]</code> is <code>undefined</code>, and <code>undefined || 0</code> is <code>0</code>. So a new key starts at 1. After that, it just adds 1.</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Need to</th><th>Write</th><th>Gives</th></tr>
+    <tr><td>list the keys</td><td><code>Object.keys(obj)</code></td><td><code>["a", "b"]</code></td></tr>
+    <tr><td>list the values</td><td><code>Object.values(obj)</code></td><td><code>[3, 1]</code></td></tr>
+    <tr><td>list the pairs</td><td><code>Object.entries(obj)</code></td><td><code>[["a", 3], ["b", 1]]</code></td></tr>
+    <tr><td>loop over keys</td><td><code>for (const k in obj)</code></td><td><code>k</code> is <code>"a"</code>, then <code>"b"</code></td></tr>
+  </table>
+  </div>
+</section>
+
+<section class="card reveal">
+  <h2>4. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>const o = { x: 1 }; o.y</code></summary><div><p><code>undefined</code>. A missing key is not an error, which is exactly why the counting idiom needs <code>|| 0</code>.</p></div></details>
+  <details class="predict"><summary><code>const k = "x"; const o = { x: 1 }; o.k</code></summary><div><p><code>undefined</code>. <code>o.k</code> means the key <code>"k"</code>. You wanted <code>o[k]</code>, which is <code>1</code>.</p></div></details>
+  <details class="predict"><summary><code>const o = {}; o[5] = "five"; Object.keys(o)</code></summary><div><p><code>["5"]</code>. Object keys are always strings, so the number 5 became <code>"5"</code>. Remember this for Q8.</p></div></details>
+  <details class="predict"><summary><code>const c = {}; c.a = (c.a || 0) + 1; c.a = (c.a || 0) + 1; c</code></summary><div><p><code>{ a: 2 }</code>. The first line makes it 1, the second makes it 2.</p></div></details>
+  <details class="predict"><summary><code>"a" in { a: 0 }</code> vs <code>{ a: 0 }.a ? "yes" : "no"</code></summary><div><p><code>true</code> vs <code>"no"</code>. The key exists, but its value <code>0</code> counts as false. Use <code>in</code> when you ask "is the key there?".</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: counting votes</h2>
+  <p>Each array value is a vote for a fruit. Watch the object grow: a new key appears the first time we see a fruit, and after that its count just goes up.</p>
+  <div id="votes"></div>
+  <p>One pass, and every lookup is instant. Count characters instead of words and you have Q1.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: "have I seen it?"</h2>
+  <p>Find two numbers whose <b>difference is 4</b>: an earlier value that is exactly 4 smaller than the current one. Instead of looking back through the array every time, we remember every value we have passed in a <code>seen</code> object (value → index).</p>
+  <div id="seen"></div>
+  <p>The key move: <b>ask first, then store</b>. Change "difference" to "sum" and you have Q5.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>trading memory for speed</h2>
+  <p>Without a map, "is there an earlier number that fits?" means scanning back through the array: O(n) per number, <b>O(n²)</b> in total. With a map, each question takes about one step, so the whole thing is <b>O(n)</b>. The price is the extra memory for the map.</p>
+<pre><code>// O(n²): look back every time
+for (let j = 0; j &lt; n; j++)
+  for (let i = 0; i &lt; j; i++)
+    if (nums[i] + nums[j] === target) ...
+
+// O(n): ask the map
+for (let j = 0; j &lt; n; j++)
+  if ((target - nums[j]) in seen) ...</code></pre>
+  <p>This "spend memory, save time" trade is one of the most common moves in DSA. Tomorrow, <code>Map</code> and <code>Set</code> do the same job with fewer surprises.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../day-08/concept.html">Next: Day 8 · Map and Set →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: count votes with the counting idiom.
+  (function () {
+    const frames = [];
+    const votes = ["kiwi", "fig", "kiwi", "plum", "fig", "kiwi"];
+    const count = {};
+    const doneBefore = (i, extra) => Object.assign(Object.fromEntries(Array.from({ length: i }, (_, k) => [k, "done"])), extra || {});
+    frames.push({ line: 1, cells: votes, map: {}, note: "count starts as an empty object: no keys yet." });
+    votes.forEach((v, i) => {
+      frames.push({ line: 2, cells: votes, ptrs: { i }, hi: doneBefore(i, { [i]: "active" }), vars: { v, "count[v]": count[v] }, map: Object.assign({}, count), mhi: v,
+        note: v in count ? "\"" + v + "\" is already a key: count[v] is " + count[v] + "." : "\"" + v + "\" is not a key yet, so count[v] is undefined, and undefined || 0 is 0." });
+      count[v] = (count[v] || 0) + 1;
+      frames.push({ line: 3, cells: votes, ptrs: { i }, hi: doneBefore(i, { [i]: "active" }), vars: { v, "count[v]": count[v] }, map: Object.assign({}, count), mhi: v,
+        note: count[v] === 1 ? "New key! count." + v + " = 1." : "Add one: count." + v + " is now " + count[v] + "." });
+    });
+    frames.push({ line: 5, cells: votes, hi: doneBefore(votes.length), vars: { winner: "kiwi" }, map: Object.assign({}, count), mhi: "kiwi", note: "Done in one pass. kiwi wins with 3 votes." });
+    Lesson.trace("#votes", {
+      title: "counting votes",
+      mapLabel: "count",
+      code: [
+        "const count = {};",
+        "for (const v of votes) {",
+        "  count[v] = (count[v] || 0) + 1;",
+        "}",
+        "// count is the answer",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: find a pair with difference 4 using a seen object.
+  (function () {
+    const frames = [];
+    const nums = [8, 3, 10, 6, 1, 14];
+    const k = 4;
+    const seen = {};
+    let answer = null;
+    frames.push({ line: 1, cells: nums, map: {}, vars: { k }, note: "seen starts empty. It will remember value → index for every number we pass." });
+    for (let j = 0; j < nums.length; j++) {
+      const need = nums[j] - k;
+      const hi = Object.fromEntries(Object.values(seen).map((idx) => [idx, "dim"]));
+      hi[j] = "active";
+      frames.push({ line: 3, cells: nums, ptrs: { j }, hi, map: Object.assign({}, seen), vars: { k, j, need }, note: "nums[" + j + "] = " + nums[j] + ". We need an earlier " + nums[j] + " - 4 = " + need + "." });
+      if (need in seen) {
+        answer = [seen[need], j];
+        frames.push({ line: 5, cells: nums, ptrs: { i: seen[need], j }, hi: { [seen[need]]: "found", [j]: "found" }, map: Object.assign({}, seen), mhi: need, vars: { k, j, need, answer }, note: need + " is a key in seen, at index " + seen[need] + ". One lookup, no searching. Answer: [" + answer.join(", ") + "]. (Notice the keys in seen: number-like keys are listed smallest first, not in the order we added them.)" });
+        break;
+      }
+      frames.push({ line: 4, cells: nums, ptrs: { j }, hi, map: Object.assign({}, seen), vars: { k, j, need }, note: "Is " + need + " in seen? No." });
+      seen[nums[j]] = j;
+      frames.push({ line: 6, cells: nums, ptrs: { j }, hi: Object.assign({}, hi, { [j]: "dim" }), map: Object.assign({}, seen), mhi: nums[j], vars: { k, j, need }, note: "Store it: seen[" + nums[j] + "] = " + j + ". (The key " + nums[j] + " is saved as the string \"" + nums[j] + "\".)" });
+    }
+    Lesson.trace("#seen", {
+      title: "difference of 4",
+      mapLabel: "seen",
+      code: [
+        "const seen = {};",
+        "for (let j = 0; j < nums.length; j++) {",
+        "  const need = nums[j] - k;",
+        "  if (need in seen)",
+        "    return [seen[need], j];",
+        "  seen[nums[j]] = j;",
+        "}",
+        "return null;",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

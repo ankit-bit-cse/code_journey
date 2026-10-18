@@ -67,5 +67,5 @@ git commit
 
 1. Re-read the concept section of that day's README.
 2. Add `console.log(...)` (JS) or `System.out.println(...)` (Java) to see what your code is doing.
-3. Run just one day: `node --test days/day-02/`
+3. Run just one day: `node --test days/day-02/javascript/questions.test.js`
 4. Still stuck: push what you have and ask in the pull request.

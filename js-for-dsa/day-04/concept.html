@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrays and Search</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 4 of 10</p>
+  <h1>Arrays: traversal and linear search</h1>
+  <p class="lede">Most DSA problems hand you an array. Learn to walk through it with an index, one box at a time.</p>
+  <nav class="daynav"><a href="../day-03/concept.html">← Day 3</a><a href="../day-05/concept.html">Day 5 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Boxes with numbers on them</h2>
+  <p>An array is a row of boxes. Each box has an <b>index</b>, starting at <b>0</b>.</p>
+<pre><code>const a = [7, 3, 9];
+a[0];              // 7
+a.length;          // 3
+a[a.length - 1];   // 9: the last box is always at length - 1
+a[1] = 4;          // a is now [7, 4, 9]</code></pre>
+  <p class="callout"><strong>No error for a wrong index:</strong> <code>a[5]</code> and <code>a[-1]</code> just give <code>undefined</code>. Your code keeps running with a wrong value, so check your loop bounds carefully.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Adding and removing</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Method</th><th>Does</th><th>Cost</th></tr>
+    <tr><td><code>a.push(x)</code></td><td>add at the end</td><td>O(1), fast</td></tr>
+    <tr><td><code>a.pop()</code></td><td>remove and return the last</td><td>O(1), fast</td></tr>
+    <tr><td><code>a.unshift(x)</code></td><td>add at the front</td><td>O(n): every box moves right</td></tr>
+    <tr><td><code>a.shift()</code></td><td>remove and return the first</td><td>O(n): every box moves left</td></tr>
+  </table>
+  </div>
+  <p>Working at the <b>end</b> of an array is cheap. Working at the <b>front</b> means renumbering every box.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Two ways to walk through an array</h2>
+<pre><code>for (let i = 0; i < a.length; i++) {   // you need the index
+  console.log(i, a[i]);
+}
+
+for (const x of a) {                   // you only need the values
+  console.log(x);
+}</code></pre>
+  <p>Use the index loop when the answer is a position, or when you need a neighbour like <code>a[i - 1]</code>. Use <code>for...of</code> when you only look at values, like adding them up.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Watch it run: find the first negative</h2>
+  <p>A <b>linear search</b> moves the pointer <code>i</code> from the left, one box at a time, and stops as soon as it finds what it wants.</p>
+  <div id="search"></div>
+  <p>Two exits: <code>return i</code> the moment we find it, or <code>return -1</code> after the loop if we never did. <code>includes</code> and <code>indexOf</code> are this same loop. Today, write it yourself.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Keeping the best so far</h2>
+  <p>To find the biggest value, remember the best one seen so far and challenge it with each new box. Start with <code>-Infinity</code>, which every number beats (Day 1).</p>
+  <div id="best"></div>
+  <p>Remember the <b>index</b> instead of the value and you have Q3. Keep a first <b>and</b> a second best and you have Q6.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>const a = [4, 8, 1]; a[a.length]</code></summary><div><p><code>undefined</code>. The last index is <code>length - 1</code>, which is 2. Index 3 does not exist.</p></div></details>
+  <details class="predict"><summary><code>const a = [4, 8, 1]; a.push(6); a.length</code></summary><div><p><code>4</code>. <code>push</code> added a box at the end.</p></div></details>
+  <details class="predict"><summary><code>const a = [4, 8, 1]; const x = a.shift();</code> then <code>x</code> and <code>a</code></summary><div><p><code>4</code> and <code>[8, 1]</code>. <code>shift</code> removes the first box, returns it, and every other box moves one place left.</p></div></details>
+  <details class="predict"><summary><code>const a = [1, 2]; const b = a; b.push(3);</code> then <code>a</code></summary><div><p><code>[1, 2, 3]</code>. <code>b = a</code> does not copy. Both names point at the same array.</p></div></details>
+  <details class="predict"><summary><code>[1, 2] === [1, 2]</code></summary><div><p><code>false</code>! <code>===</code> on arrays asks "is this the <b>same</b> array?", not "do they hold the same values?". Two separate arrays are never <code>===</code>.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>7. Arrays are references</h2>
+  <p>A variable does not hold the array itself. It holds a <b>reference</b>, like an address. <code>b = a</code> copies the address, so both names lead to one array. To get a real, separate copy use <code>[...a]</code> or <code>a.slice()</code>.</p>
+  <div id="refs"></div>
+  <p class="callout"><strong>DSA habit:</strong> if a question says "do not change the input", copy it first with <code>[...arr]</code> and work on the copy.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>linear search is O(n)</h2>
+  <p>A linear search may have to look at every box, so its cost grows with the array: n boxes, up to n checks. That is <b>O(n)</b>, and it's fine for one search.</p>
+<pre><code>// a search inside a loop: n rounds × n checks = O(n²)
+for (const x of a) {
+  if (b.includes(x)) count++;   // includes is a hidden loop!
+}</code></pre>
+  <p>Watch out for hidden loops like <code>includes</code>, <code>indexOf</code> and <code>shift</code> inside your own loop. On Day 8 a <code>Set</code> makes that lookup O(1), and on Day 10 binary search finds things in a sorted array in O(log n).</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../day-05/concept.html">Next: Day 5 · arrays in place: swap and two pointers →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: linear search for the first negative number.
+  (function () {
+    const frames = [];
+    const arr = [6, 2, 9, -4, 5, -1];
+    const hi = {};
+    frames.push({ line: 1, cells: arr, vars: {}, note: "We want the index of the first negative number." });
+    let result = -1;
+    for (let i = 0; i < arr.length; i++) {
+      frames.push({ line: 3, cells: arr, ptrs: { i }, hi: Object.assign({}, hi, { [i]: "compare" }), vars: { i, "arr[i]": arr[i] }, note: "i = " + i + ". Is arr[" + i + "] = " + arr[i] + " less than 0?" });
+      if (arr[i] < 0) {
+        result = i;
+        frames.push({ line: 3, cells: arr, ptrs: { i }, hi: Object.assign({}, hi, { [i]: "found" }), vars: { i, "arr[i]": arr[i] }, note: "Yes! Return " + i + " right away. Boxes " + (i + 1) + " to " + (arr.length - 1) + " are never even looked at." });
+        break;
+      }
+      hi[i] = "dim";
+      frames.push({ line: 2, cells: arr, ptrs: { i }, hi: Object.assign({}, hi), vars: { i, "arr[i]": arr[i] }, note: arr[i] + " is not negative. Move i one box right." });
+    }
+    frames.push({ line: 7, cells: arr, hi: { [result]: "found" }, vars: { result }, note: "firstNegative returned " + result + ". It took " + (result + 1) + " checks. In the worst case it would take " + arr.length + "." });
+    Lesson.trace("#search", {
+      title: "firstNegative([6, 2, 9, -4, 5, -1])",
+      code: [
+        "function firstNegative(arr) {",
+        "  for (let i = 0; i < arr.length; i++) {",
+        "    if (arr[i] < 0) return i;",
+        "  }",
+        "  return -1;",
+        "}",
+        "const result = firstNegative(arr);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: keep the best (largest) value seen so far.
+  (function () {
+    const frames = [];
+    const arr = [3, 8, 2, 8, 11, 5];
+    let best = -Infinity;
+    let bestAt = -1;
+    frames.push({ line: 1, cells: arr, vars: { best }, note: "best starts at -Infinity, so the very first number will beat it." });
+    for (let i = 0; i < arr.length; i++) {
+      const x = arr[i];
+      const hi = {};
+      for (let k = 0; k < i; k++) hi[k] = "dim";
+      if (bestAt >= 0) hi[bestAt] = "done";
+      if (x > best) {
+        const old = best;
+        best = x;
+        bestAt = i;
+        hi[i] = "found";
+        frames.push({ line: 3, cells: arr, ptrs: { i }, hi, vars: { i, x, best }, note: x + " > " + old + ", so best becomes " + x + "." });
+      } else {
+        hi[i] = "compare";
+        frames.push({ line: 3, cells: arr, ptrs: { i }, hi, vars: { i, x, best }, note: x + " is not bigger than " + best + (x === best ? " (equal is not bigger)" : "") + ". Keep best = " + best + "." });
+      }
+    }
+    frames.push({ line: 5, cells: arr, hi: { [bestAt]: "found" }, vars: { best }, note: "One pass, " + arr.length + " checks: the largest is " + best + ", at index " + bestAt + "." });
+    Lesson.trace("#best", {
+      title: "Largest value",
+      code: [
+        "let best = -Infinity;",
+        "for (let i = 0; i < arr.length; i++) {",
+        "  if (arr[i] > best) best = arr[i];",
+        "}",
+        "console.log(best);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: reference vs copy. The boxes are the one array that a and b share; c lives only in the variables.
+  (function () {
+    const frames = [];
+    const a = [1, 2, 3];
+    let b, c;
+    frames.push({ line: 1, cells: a.slice(), ptrs: { a: 0 }, vars: { a: a.slice() }, note: "One array is created (the boxes). a holds a reference to it: an arrow pointing at it." });
+    b = a;
+    frames.push({ line: 2, cells: a.slice(), ptrs: { a: 0, b: 0 }, vars: { a: a.slice(), b: b.slice() }, note: "b = a copies the arrow, not the boxes. Two names, still only ONE array." });
+    b[0] = 99;
+    frames.push({ line: 3, cells: a.slice(), ptrs: { a: 0, b: 0 }, hi: { 0: "bad" }, vars: { a: a.slice(), b: b.slice() }, note: "Change b[0]... and a[0] changes too, because it is the same box." });
+    c = [...a];
+    frames.push({ line: 4, cells: a.slice(), ptrs: { a: 0, b: 0 }, vars: { a: a.slice(), b: b.slice(), c: c.slice() }, note: "[...a] builds a brand new array with the same values. c points at that new one, not at these boxes." });
+    c[1] = 50;
+    frames.push({ line: 5, cells: a.slice(), ptrs: { a: 0, b: 0 }, hi: { 1: "done" }, vars: { a: a.slice(), b: b.slice(), c: c.slice() }, note: "Change c[1] to 50. Look: box 1 here is still 2. Only the copy changed." });
+    frames.push({ line: 6, cells: a.slice(), ptrs: { a: 0, b: 0 }, vars: { a: a.slice(), b: b.slice(), c: c.slice() }, note: "Two arrays, three names: a and b share these boxes, c owns its own copy." });
+    Lesson.trace("#refs", {
+      title: "Reference vs copy",
+      code: [
+        "const a = [1, 2, 3];",
+        "const b = a;",
+        "b[0] = 99;",
+        "const c = [...a];",
+        "c[1] = 50;",
+        "console.log(a, b, c);",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

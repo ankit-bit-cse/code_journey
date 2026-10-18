@@ -19,6 +19,10 @@ Each session: **~15 min concept → ~25 min questions → ~5 min test, commit, p
 | [2](days/day-02) | [for loops](days/day-02/javascript/README.md) | [for loops and arrays](days/day-02/java/README.md) |
 | [3](days/day-03) | [functions and return values](days/day-03/javascript/README.md) | [methods and return types](days/day-03/java/README.md) |
 
+## JS for DSA (10-day track)
+
+[`js-for-dsa/`](js-for-dsa) is a 10-day JavaScript track that gets you ready for DSA: numbers and digits, loops and counting steps, functions, arrays and two pointers, strings, objects and `Map`/`Set` as hash maps, sorting and sliding windows, then grids, recursion and binary search. Every day has an **animated lesson** (`concept.html`, open it in your browser) and 8 scaffolded questions. Start at [`js-for-dsa/index.html`](js-for-dsa/index.html); details in [its README](js-for-dsa/README.md).
+
 What's coming next: [ROADMAP.md](ROADMAP.md). What's done: [PROGRESS.md](PROGRESS.md).
 
 ## Setup (once)
@@ -28,7 +32,7 @@ You need [Node.js](https://nodejs.org) 20+ and [Java (JDK)](https://adoptium.net
 ```bash
 git clone <this repo's URL>
 cd code-journey
-npm test              # JavaScript questions
+npm test              # JavaScript questions (both tracks)
 npm run test:java     # Java questions
 ```
 

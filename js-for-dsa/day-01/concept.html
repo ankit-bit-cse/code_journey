@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Numbers and Digits</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 1 of 10</p>
+  <h1>Numbers, operators and digits</h1>
+  <p class="lede">Two tiny operators, <code>%</code> and <code>Math.floor</code>, let you take any number apart digit by digit.</p>
+  <nav class="daynav"><a href="../index.html">← All days</a><a href="../day-02/concept.html">Day 2 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. The arithmetic operators</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Operator</th><th>Meaning</th><th>Example</th><th>Result</th></tr>
+    <tr><td><code>+ - *</code></td><td>add, subtract, multiply</td><td><code>7 * 3</code></td><td><code>21</code></td></tr>
+    <tr><td><code>/</code></td><td>divide: <b>always</b> keeps decimals</td><td><code>7 / 2</code></td><td><code>3.5</code></td></tr>
+    <tr><td><code>%</code></td><td>remainder after dividing</td><td><code>7 % 2</code></td><td><code>1</code></td></tr>
+    <tr><td><code>**</code></td><td>power</td><td><code>2 ** 5</code></td><td><code>32</code></td></tr>
+  </table>
+  </div>
+  <p>JavaScript has no integer division. To get "how many whole times does 2 fit in 7", divide and drop the decimals:</p>
+<pre><code>Math.floor(7 / 2);   // 3
+Math.trunc(-7 / 2);  // -3  (trunc cuts toward 0; floor would give -4)</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>2. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>17 % 5</code></summary><div><p><code>2</code>. 5 fits into 17 three times (15), and 2 is left over.</p></div></details>
+  <details class="predict"><summary><code>8 % 2 === 0</code></summary><div><p><code>true</code>. A remainder of 0 means "divides exactly", so this is how you test for even numbers.</p></div></details>
+  <details class="predict"><summary><code>472 % 10</code> and <code>Math.floor(472 / 10)</code></summary><div><p><code>2</code> and <code>47</code>. The first <b>reads</b> the last digit and the second <b>removes</b> it. Remember this pair: it's the whole lesson.</p></div></details>
+  <details class="predict"><summary><code>5 == "5"</code> vs <code>5 === "5"</code></summary><div><p><code>true</code> vs <code>false</code>. <code>==</code> converts the string to a number first. Always use <code>===</code>.</p></div></details>
+  <details class="predict"><summary><code>0.1 + 0.2 === 0.3</code></summary><div><p><code>false</code>! Decimals are stored approximately (<code>0.30000000000000004</code>). Stick to whole numbers when you can.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: taking 472 apart</h2>
+  <p>Press <b>Play</b>, or step with <b>Next</b>. Watch <code>n</code> shrink while the digits drop out one at a time, <b>right to left</b>.</p>
+  <div id="digits"></div>
+  <p>Every digit question today is this loop with a different line inside: count the digits, add them, or build them back up in reverse.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Building a number: <code>rev * 10 + digit</code></h2>
+  <p>Going the other way, multiplying by 10 makes room for a new last digit:</p>
+<pre><code>let rev = 0;
+rev = rev * 10 + 2;   // 2
+rev = rev * 10 + 7;   // 27
+rev = rev * 10 + 4;   // 274</code></pre>
+  <p>Combine this with the loop above and you can reverse a number (Q5).</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Special values you will use in DSA</h2>
+<pre><code>Infinity > 1e300;     // true: start with this when looking for a minimum
+-Infinity;            // start with this when looking for a maximum
+Number.isInteger(4);  // true
+Number.isInteger(4.5);// false
+Math.abs(-7);         // 7
+Math.max(3, 9, 2);    // 9</code></pre>
+  <p class="callout"><strong>Why Infinity?</strong> If you start a minimum at <code>0</code>, an array like <code>[5, 8]</code> would wrongly say 0 is the minimum. <code>Infinity</code> loses to every real number.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>counting steps</h2>
+  <p>How many times does the digit loop run? Once per digit. A number with <i>d</i> digits takes <i>d</i> steps, and doubling the number barely adds a step. When the input shrinks by a fixed factor each step, the step count grows like <b>log n</b>. Watch the same idea with halving:</p>
+  <div id="halving"></div>
+  <p>Remember this picture: it's exactly why <b>binary search</b> (Day 10) is so fast.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../day-02/concept.html">Next: Day 2 · loops and counting steps →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: pull the digits out of 472.
+  (function () {
+    const frames = [];
+    let n = 472;
+    const digits = [];
+    frames.push({ line: 1, vars: { n }, cells: [], note: "We start with n = 472 and an empty list of digits." });
+    while (n > 0) {
+      frames.push({ line: 3, vars: { n }, cells: digits.slice(), note: n + " > 0, so the loop runs again." });
+      const digit = n % 10;
+      frames.push({ line: 4, vars: { n, digit }, cells: digits.slice(), note: n + " % 10 = " + digit + ": that's the last digit." });
+      digits.push(digit);
+      frames.push({ line: 5, vars: { n, digit }, cells: digits.slice(), hi: { [digits.length - 1]: "active" }, note: "Save " + digit + "." });
+      const next = Math.floor(n / 10);
+      frames.push({ line: 6, vars: { n: next, digit }, cells: digits.slice(), note: "Math.floor(" + n + " / 10) = " + next + ": the last digit is gone." });
+      n = next;
+    }
+    frames.push({ line: 3, vars: { n }, cells: digits, hi: { 0: "done", 1: "done", 2: "done" }, note: "n is 0, so the loop stops. 3 digits, 3 rounds." });
+    Lesson.trace("#digits", {
+      title: "digitsOf(472)",
+      code: [
+        "let n = 472;",
+        "const digits = [];",
+        "while (n > 0) {",
+        "  const digit = n % 10;",
+        "  digits.push(digit);",
+        "  n = Math.floor(n / 10);",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: halving 40 until it reaches 1.
+  (function () {
+    const frames = [];
+    let n = 40, steps = 0;
+    const seen = [n];
+    frames.push({ line: 1, vars: { n, steps }, cells: seen.slice(), hi: { 0: "active" }, note: "Start at 40." });
+    while (n > 1) {
+      n = Math.floor(n / 2);
+      steps++;
+      seen.push(n);
+      frames.push({ line: 3, vars: { n, steps }, cells: seen.slice(), hi: { [seen.length - 1]: "active" }, note: "Halve it: " + n + ". That was step " + steps + "." });
+    }
+    frames.push({ line: 5, vars: { n, steps }, cells: seen, hi: Object.fromEntries(seen.map((_, i) => [i, "done"])), note: "Only " + steps + " steps for 40. For 1,000,000 it would be just 19." });
+    Lesson.trace("#halving", {
+      title: "Halving until 1",
+      code: ["let n = 40, steps = 0;", "while (n > 1) {", "  n = Math.floor(n / 2);", "  steps++;", "}"],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grids, Recursion, Search</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 10 of 10</p>
+  <h1>2D arrays, recursion and binary search</h1>
+  <p class="lede">The last day puts it all together: grids are arrays of arrays, recursion is a function that calls itself, and binary search finds anything in a sorted array in a handful of steps.</p>
+  <nav class="daynav"><a href="../day-09/concept.html">← Day 9</a><a href="../index.html">All days</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. A grid is an array of rows</h2>
+<pre><code>const grid = [
+  [3, 8, 1],   // row 0
+  [6, 2, 9],   // row 1
+];
+grid[1][2];        // 9: row 1, then column 2
+grid.length;       // 2: how many rows
+grid[0].length;    // 3: how many columns</code></pre>
+  <p>Always read it as <b>row first, then column</b>: <code>grid[r][c]</code>. The first <code>[r]</code> gives you a whole row (an array), and the second <code>[c]</code> picks a value from it.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Making a grid (and a nasty gotcha)</h2>
+<pre><code>// Right: Array.from calls the function once per row,
+// so each row is a NEW array.
+const good = Array.from({ length: 3 }, () => new Array(4).fill(0));
+
+// Wrong: fill puts the SAME row array in all 3 slots.
+const bad = new Array(3).fill(new Array(4).fill(0));
+bad[0][0] = 9;
+bad;   // [[9,0,0,0], [9,0,0,0], [9,0,0,0]]  !!</code></pre>
+  <p class="callout"><strong>Why?</strong> Remember Day 4: arrays are references. <code>fill(x)</code> copies the <b>reference</b> to the one row into every slot, so all the rows are really one row.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: visiting every cell</h2>
+  <p>A loop over rows with a loop over columns inside it. Here we find the biggest value. Watch the highlight move along each row, then drop to the next one.</p>
+  <div id="gridmax"></div>
+  <p>A grid with R rows and C columns has R × C cells, so a full visit is O(R × C).</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Watch it run: the 4 neighbours</h2>
+  <p>Many grid problems (mazes, islands, flood fill) ask "what's next to this cell?". The 4 neighbours of <code>(r, c)</code> are up, down, left and right. A list of directions keeps the code short. Here we count how many neighbours of <code>(0, 1)</code> are 1:</p>
+  <div id="neighbours"></div>
+  <p class="callout"><strong>Check the edges first.</strong> <code>grid[-1]</code> is <code>undefined</code>, and <code>undefined[1]</code> crashes. Test <code>nr</code> and <code>nc</code> before you read the cell.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Recursion: a function that calls itself</h2>
+  <p>Every recursive function has two parts:</p>
+  <ol>
+    <li>a <b>base case</b>: a tiny input you can answer right away, which stops the calls, and</li>
+    <li>a <b>smaller problem</b>: call yourself on a smaller input, then use the answer.</li>
+  </ol>
+<pre><code>function countdown(n) {
+  if (n === 0) return;     // base case
+  console.log(n);
+  countdown(n - 1);        // smaller problem
+}
+countdown(3);   // 3, 2, 1</code></pre>
+  <p>Forget the base case and the calls never stop: <code>RangeError: Maximum call stack size exceeded</code>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: the call stack during recursion</h2>
+  <p>You met the call stack on Day 3. With recursion the same function stacks up many times, each with its own <code>n</code>. Each call <b>waits</b> until the one above it returns.</p>
+  <div id="stack"></div>
+  <p>The stack grows on the way down to the base case, then shrinks on the way back up, and each return value is used by the call below it.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Binary search: halve it every time</h2>
+  <p>In a <b>sorted</b> array, look at the middle item. If it is too small, the answer can only be to the right, so throw away the left half. If it is too big, throw away the right half. Keep two edges:</p>
+<pre><code>lo   // the first index still possible
+hi   // the last index still possible
+mid = Math.floor((lo + hi) / 2)</code></pre>
+  <p>Below is the guessing game "I'm thinking of a number from 1 to 12". Each guess is the middle of what's left. The same <code>lo</code>, <code>mid</code>, <code>hi</code> moves work on an array, using <code>arr[mid]</code> instead of <code>mid</code>.</p>
+  <div id="guess"></div>
+  <p>Only 4 guesses for 12 numbers. For 1,000,000 numbers it would be about 20.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>[[1, 2], [3, 4]][1][0]</code></summary><div><p><code>3</code>. Row 1 is <code>[3, 4]</code>, and its index 0 is 3.</p></div></details>
+  <details class="predict"><summary><code>const g = new Array(2).fill([]); g[0].push(5); g</code></summary><div><p><code>[[5], [5]]</code>. Both slots hold the same array. Use <code>Array.from</code> instead.</p></div></details>
+  <details class="predict"><summary><code>const f = (n) =&gt; n === 0 ? 0 : 1 + f(n - 1); f(4)</code></summary><div><p><code>4</code>. f(4) = 1 + f(3) = 1 + 1 + f(2) = ... = 1 + 1 + 1 + 1 + 0.</p></div></details>
+  <details class="predict"><summary>Binary search on <code>[2, 4, 6, 8, 10]</code>: what is the first <code>mid</code>?</summary><div><p><code>2</code> (the index), so it looks at the value 6 first. lo = 0, hi = 4, and Math.floor(4 / 2) = 2.</p></div></details>
+  <details class="predict"><summary>Binary search on <code>[5, 1, 4, 2]</code> for <code>5</code></summary><div><p><code>-1</code>, even though 5 is right there! mid = 1 holds 1, which is less than 5, so it throws away the left half, and the 5 with it. Binary search only works on a <b>sorted</b> array.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>the shapes of DSA</h2>
+  <p>Grids describe boards, maps and mazes: "count the islands", "shortest path out of the maze". Recursion is the base of trees, backtracking and divide-and-conquer (merge sort splits an array in half and calls itself on each half). Binary search shows the power of <b>O(log n)</b>: halving the problem every step, the same picture as Day 1.</p>
+</section>
+
+<section class="card reveal">
+  <h2>9. What's next</h2>
+  <p>In 10 days you learned the JavaScript that DSA needs: numbers and digits, loops, functions, arrays, two pointers, strings, objects, Map and Set, sorting, sliding windows, grids, recursion and binary search.</p>
+  <p><b>You're ready to start DSA.</b> Pick easy problems on arrays, strings and hash maps first, and reach for the patterns from these days. Advanced JavaScript (classes, promises, async/await, modules) comes later, when you need it.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../index.html">All days →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: find the biggest value in a grid.
+  (function () {
+    const grid = [[3, 8, 1, 4], [6, 2, 9, 5], [7, 0, 4, 2]];
+    const rows = grid.length, cols = grid[0].length;
+    const frames = [];
+    let best = -Infinity, at = null;
+    const seen = {};
+    const ghi = (extra) => {
+      const h = Object.assign({}, seen);
+      if (at) h[at] = "found";
+      return Object.assign(h, extra || {});
+    };
+    frames.push({ line: 3, grid, vars: { rows, cols, best }, note: "The grid has " + rows + " rows and " + cols + " columns. best starts at -Infinity." });
+    for (let r = 0; r < rows; r++) {
+      frames.push({ line: 4, grid, ghi: ghi(), vars: { r, best }, note: "Start row " + r + ": [" + grid[r].join(", ") + "]." });
+      for (let c = 0; c < cols; c++) {
+        const v = grid[r][c];
+        if (v > best) {
+          best = v; at = r + "," + c;
+          seen[at] = "done";
+          frames.push({ line: 7, grid, ghi: ghi(), vars: { r, c, "grid[r][c]": v, best }, note: "grid[" + r + "][" + c + "] = " + v + " is bigger than the best so far. best = " + v + "." });
+        } else {
+          seen[r + "," + c] = "done";
+          frames.push({ line: 6, grid, ghi: ghi({ [r + "," + c]: "active" }), vars: { r, c, "grid[r][c]": v, best }, note: "grid[" + r + "][" + c + "] = " + v + " is not bigger than " + best + ". Move on." });
+        }
+      }
+    }
+    frames.push({ line: 10, grid, ghi: { [at]: "found" }, vars: { best }, note: "Every cell visited: " + rows + " × " + cols + " = " + rows * cols + " checks. The biggest is " + best + " at (" + at.replace(",", ", ") + ")." });
+    Lesson.trace("#gridmax", {
+      title: "Biggest value in a grid",
+      code: [
+        "const rows = grid.length;",
+        "const cols = grid[0].length;",
+        "let best = -Infinity;",
+        "for (let r = 0; r < rows; r++) {",
+        "  for (let c = 0; c < cols; c++) {",
+        "    if (grid[r][c] > best) {",
+        "      best = grid[r][c];",
+        "    }",
+        "  }",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: count the neighbours of (0, 1) that are 1.
+  (function () {
+    const grid = [[0, 1, 0, 0], [1, 1, 0, 1], [0, 1, 1, 0]];
+    const rows = grid.length, cols = grid[0].length, r = 0, c = 1;
+    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const names = ["up", "down", "left", "right"];
+    const frames = [];
+    let ones = 0;
+    const base = { [r + "," + c]: "active" };
+    const checked = {};
+    frames.push({ line: 2, grid, ghi: base, vars: { r, c, ones }, note: "We stand on (0, 1), the highlighted cell. ones starts at 0." });
+    dirs.forEach(([dr, dc], k) => {
+      const nr = r + dr, nc = c + dc;
+      frames.push({ line: 4, grid, ghi: Object.assign({}, checked, base), vars: { r, c, dr, dc, nr, nc, ones }, note: names[k] + ": (" + r + " + " + dr + ", " + c + " + " + dc + ") = (" + nr + ", " + nc + ")." });
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
+        frames.push({ line: 6, grid, ghi: Object.assign({}, checked, base), vars: { r, c, dr, dc, nr, nc, ones }, note: "(" + nr + ", " + nc + ") is outside the grid, so skip it with continue." });
+        return;
+      }
+      const v = grid[nr][nc];
+      if (v === 1) ones++;
+      checked[nr + "," + nc] = v === 1 ? "found" : "dim";
+      frames.push({ line: 7, grid, ghi: Object.assign({}, checked, base), vars: { r, c, dr, dc, nr, nc, ones }, note: "grid[" + nr + "][" + nc + "] is " + v + (v === 1 ? ", so ones goes up to " + ones + "." : ", so ones stays " + ones + ".") });
+    });
+    frames.push({ line: 8, grid, ghi: Object.assign({}, checked, base), vars: { r, c, ones }, note: "All 4 directions checked: " + ones + " neighbours are 1. A corner or edge cell has fewer than 4 real neighbours." });
+    Lesson.trace("#neighbours", {
+      title: "Neighbours of (0, 1)",
+      code: [
+        "const dirs = [[-1,0],[1,0],[0,-1],[0,1]];",
+        "let ones = 0;",
+        "for (const [dr, dc] of dirs) {",
+        "  const nr = r + dr, nc = c + dc;",
+        "  if (nr < 0 || nr >= rows ||",
+        "      nc < 0 || nc >= cols) continue;",
+        "  if (grid[nr][nc] === 1) ones++;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: the call stack while sumTo(3) recurses.
+  (function () {
+    const frames = [];
+    const stack = [];
+    const snap = (line, note, vars) => {
+      const m = new Map(stack.map((s) => [s.label, s.state]));
+      frames.push({ line, map: m, mhi: stack.length ? stack[stack.length - 1].label : null, vars: vars || {}, note });
+    };
+    function sumTo(n) {
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "sumTo(" + n + ")", state: "running" });
+      snap(1, "sumTo(" + n + ") is called and goes on top of the stack.", { n });
+      if (n === 0) {
+        stack[stack.length - 1].state = "returns 0";
+        snap(2, "n is 0: the base case. Return 0 right away, no more calls.", { n });
+        stack.pop();
+        stack[stack.length - 1].state = "running";
+        return 0;
+      }
+      snap(3, "n is not 0, so it needs sumTo(" + (n - 1) + ") first. sumTo(" + n + ") waits.", { n });
+      const sub = sumTo(n - 1);
+      const out = n + sub;
+      stack[stack.length - 1].state = "returns " + out;
+      snap(3, "sumTo(" + (n - 1) + ") gave back " + sub + ". So sumTo(" + n + ") returns " + n + " + " + sub + " = " + out + ".", { n });
+      stack.pop();
+      if (stack.length) stack[stack.length - 1].state = "running";
+      return out;
+    }
+    stack.push({ label: "main", state: "running" });
+    snap(5, "Start: only main is on the stack.");
+    const r = sumTo(3);
+    snap(5, "Back in main with r = " + r + ". The stack is just main again.", { r });
+    Lesson.trace("#stack", {
+      title: "sumTo(3), recursively",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function sumTo(n) {",
+        "  if (n === 0) return 0;  // base",
+        "  return n + sumTo(n - 1);",
+        "}",
+        "const r = sumTo(3);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 4: guess a number from 1 to 12 with lo / mid / hi.
+  (function () {
+    const nums = Array.from({ length: 12 }, (_, i) => i + 1);
+    const secret = 10;
+    const frames = [];
+    let lo = 1, hi = 12, tries = 0;
+    const shade = (extra) => {
+      const h = {};
+      nums.forEach((v, i) => { if (v < lo || v > hi) h[i] = "dim"; });
+      return Object.assign(h, extra || {});
+    };
+    frames.push({ line: 2, cells: nums, hi: shade(), ptrs: { lo: lo - 1, hi: hi - 1 }, vars: { secret, lo, hi, tries }, note: "The secret is " + secret + ". Every number from 1 to 12 is still possible." });
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      tries++;
+      frames.push({ line: 4, cells: nums, hi: shade({ [mid - 1]: "compare" }), ptrs: { lo: lo - 1, mid: mid - 1, hi: hi - 1 }, vars: { secret, lo, mid, hi, tries }, note: "Guess the middle: Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + "." });
+      if (mid === secret) {
+        frames.push({ line: 6, cells: nums, hi: shade({ [mid - 1]: "found" }), ptrs: { lo: lo - 1, mid: mid - 1, hi: hi - 1 }, vars: { secret, lo, mid, hi, tries }, note: mid + " is the secret! Found in " + tries + " tries." });
+        break;
+      }
+      if (mid < secret) {
+        lo = mid + 1;
+        frames.push({ line: 7, cells: nums, hi: shade(), ptrs: { lo: lo - 1, hi: hi - 1 }, vars: { secret, lo, mid, hi, tries }, note: mid + " is too small. Everything up to " + mid + " is out: lo = " + lo + "." });
+      } else {
+        hi = mid - 1;
+        frames.push({ line: 8, cells: nums, hi: shade(), ptrs: { lo: lo - 1, hi: hi - 1 }, vars: { secret, lo, mid, hi, tries }, note: mid + " is too big. Everything from " + mid + " up is out: hi = " + hi + "." });
+      }
+    }
+    Lesson.trace("#guess", {
+      stacked: true,
+      title: "Guess a number from 1 to 12",
+      code: [
+        "function guess(secret) {",
+        "  let lo = 1, hi = 12, tries = 0;",
+        "  while (lo <= hi) {",
+        "    const mid = Math.floor((lo + hi) / 2);",
+        "    tries++;",
+        "    if (mid === secret) return tries;",
+        "    if (mid < secret) lo = mid + 1;",
+        "    else hi = mid - 1;",
+        "  }",
+        "}",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swap and Two Pointers</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 5 of 10</p>
+  <h1>Arrays in place: swap and two pointers</h1>
+  <p class="lede">Two index variables walking through one array can do a lot of work without ever making a copy.</p>
+  <nav class="daynav"><a href="../day-04/concept.html">← Day 4</a><a href="../day-06/concept.html">Day 6 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Change it, or build a new one?</h2>
+  <p>A function can <b>change the array it was given</b> (we say "in place"), or <b>build a new array</b> and leave the input alone.</p>
+<pre><code>function doubleInPlace(arr) {   // changes arr itself
+  for (let i = 0; i &lt; arr.length; i++) arr[i] = arr[i] * 2;
+  return arr;
+}
+
+function doubled(arr) {         // arr is not touched
+  const out = [];
+  for (const x of arr) out.push(x * 2);
+  return out;
+}</code></pre>
+  <p>In place needs no extra array, so it uses <b>O(1) extra space</b>. Today's questions say which kind they want. Read carefully.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Swapping two values</h2>
+  <p>If you write <code>arr[i] = arr[j]</code> first, the old <code>arr[i]</code> is gone. Park it in a temporary variable:</p>
+<pre><code>const temp = arr[i];
+arr[i] = arr[j];
+arr[j] = temp;</code></pre>
+  <p>JavaScript also has a one-line version. It builds a little array on the right and unpacks it on the left:</p>
+<pre><code>[arr[i], arr[j]] = [arr[j], arr[i]];</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>3. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>let a = 1, b = 2; a = b; b = a;</code> → what are <code>a</code> and <code>b</code>?</summary><div><p>Both are <code>2</code>. The old value of <code>a</code> was overwritten before it was saved. That's why you need <code>temp</code>.</p></div></details>
+  <details class="predict"><summary><code>const x = [1, 2, 3]; const y = x; y[0] = 9;</code> → <code>x</code>?</summary><div><p><code>[9, 2, 3]</code>. <code>x</code> and <code>y</code> are the same array. Changing an array in place changes it for everyone holding it.</p></div></details>
+  <details class="predict"><summary>With <code>arr = [4, 8]</code>: <code>[arr[0], arr[1]] = [arr[1], arr[0]]</code></summary><div><p><code>arr</code> becomes <code>[8, 4]</code>. The right side <code>[8, 4]</code> is built first, then unpacked into the two slots.</p></div></details>
+  <details class="predict"><summary>For <code>[1, 2, 3, 4, 5]</code>, how many times does <code>while (left &lt; right)</code> run?</summary><div><p><code>2</code>. (0,4) then (1,3). Then both pointers are at 2, so <code>left &lt; right</code> is false. The middle element never needs to move.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>4. Watch it run: two pointers from both ends</h2>
+  <p>Here we reverse only the <b>middle part</b> of an array, from index 1 to index 4. <code>lo</code> and <code>hi</code> swap, then step toward each other. Press <b>Play</b>, or step with <b>Next</b>.</p>
+  <div id="ends"></div>
+  <p>Set <code>lo = 0</code> and <code>hi = arr.length - 1</code> and you have reversed the whole array (Q2). Compare instead of swap and you have a palindrome check (Q3).</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: read and write pointers</h2>
+  <p>Now both pointers go the <b>same way</b>. <code>read</code> looks at every value. <code>write</code> only moves when we keep one. Here we drop the negative numbers and keep the rest in order.</p>
+  <div id="readwrite"></div>
+  <p>Everything left of <code>write</code> is the finished answer. The same idea moves zeros to the end (Q4) and squeezes out duplicates (Q5).</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Merging two sorted arrays</h2>
+  <p>Put one pointer at the front of each array. Take the smaller front value, then move <b>that</b> pointer:</p>
+<pre><code>a = [1, 4, 7]     b = [2, 3, 8]
+     i                 j        1 &lt; 2, take 1, i++
+        i              j        4 &gt; 2, take 2, j++
+        i                 j     4 &gt; 3, take 3, j++
+        ...
+out = [1, 2, 3, 4, 7, 8]</code></pre>
+  <p>When one array runs out, copy whatever is left in the other. That's Q7.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>from n² to n</h2>
+  <p>"Find two numbers in a sorted array that add up to 10." The slow way tries every pair with two nested loops: about <b>n²</b> steps. With two pointers, each step moves <code>left</code> or <code>right</code> by one and they never go back, so it takes at most <b>n</b> steps:</p>
+<pre><code>sum too small?  left++    (the only way to get bigger)
+sum too big?    right--   (the only way to get smaller)</code></pre>
+  <p>The same "never go back" pointers power merge sort, removing duplicates, and the sliding window on Day 9.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../day-06/concept.html">Next: Day 6 · strings →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: reverse the middle part arr[1..4] with lo/hi pointers.
+  (function () {
+    const frames = [];
+    const arr = [9, 1, 2, 3, 4, 8];
+    let lo = 1, hi = 4;
+    const keepHi = () => ({ 0: "dim", 5: "dim" });
+    frames.push({ line: 1, vars: { lo, hi }, cells: arr.slice(), hi: keepHi(), ptrs: { lo, hi }, note: "We only reverse indices 1 to 4. The 9 and the 8 stay where they are." });
+    while (lo < hi) {
+      frames.push({ line: 2, vars: { lo, hi }, cells: arr.slice(), hi: Object.assign(keepHi(), { [lo]: "compare", [hi]: "compare" }), ptrs: { lo, hi }, note: lo + " < " + hi + ", so swap arr[" + lo + "] and arr[" + hi + "]." });
+      const temp = arr[lo];
+      frames.push({ line: 3, vars: { lo, hi, temp }, cells: arr.slice(), hi: Object.assign(keepHi(), { [lo]: "active" }), ptrs: { lo, hi }, note: "Park arr[" + lo + "] = " + temp + " in temp." });
+      arr[lo] = arr[hi];
+      frames.push({ line: 4, vars: { lo, hi, temp }, cells: arr.slice(), hi: Object.assign(keepHi(), { [lo]: "active" }), ptrs: { lo, hi }, note: "Copy arr[" + hi + "] into slot " + lo + ". For a moment the value " + arr[hi] + " is there twice." });
+      arr[hi] = temp;
+      frames.push({ line: 5, vars: { lo, hi, temp }, cells: arr.slice(), hi: Object.assign(keepHi(), { [lo]: "done", [hi]: "done" }), ptrs: { lo, hi }, note: "Put temp (" + temp + ") into slot " + hi + ". Swap done." });
+      lo++;
+      hi--;
+      frames.push({ line: 6, vars: { lo, hi }, cells: arr.slice(), hi: keepHi(), ptrs: { lo, hi }, note: "Step inward: lo = " + lo + ", hi = " + hi + "." });
+    }
+    frames.push({ line: 2, vars: { lo, hi }, cells: arr.slice(), hi: { 0: "dim", 1: "done", 2: "done", 3: "done", 4: "done", 5: "dim" }, ptrs: { lo, hi }, note: "lo is no longer less than hi, so we stop. 4 values reversed with only 2 swaps." });
+    Lesson.trace("#ends", {
+      title: "reverse arr[1..4]",
+      code: [
+        "let lo = 1, hi = 4;",
+        "while (lo < hi) {",
+        "  const temp = arr[lo];",
+        "  arr[lo] = arr[hi];",
+        "  arr[hi] = temp;",
+        "  lo++; hi--;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: remove negatives in place with read/write pointers.
+  (function () {
+    const frames = [];
+    const arr = [3, -1, 5, -4, -2, 7];
+    let write = 0;
+    const doneUpTo = (w, extra) => Object.assign(Object.fromEntries(Array.from({ length: w }, (_, i) => [i, "done"])), extra || {});
+    frames.push({ line: 2, vars: { write }, cells: arr.slice(), ptrs: { write }, note: "write = 0: the first free slot for a value we keep." });
+    for (let read = 0; read < arr.length; read++) {
+      const x = arr[read];
+      if (x >= 0) {
+        frames.push({ line: 4, vars: { read, write, "arr[read]": x }, cells: arr.slice(), hi: doneUpTo(write, { [read]: "found" }), ptrs: { read, write }, note: x + " is not negative, so we keep it." });
+        arr[write] = x;
+        frames.push({ line: 5, vars: { read, write, "arr[read]": x }, cells: arr.slice(), hi: doneUpTo(write + 1), ptrs: { read, write }, note: "Copy " + x + " into slot " + write + "." });
+        write++;
+        frames.push({ line: 6, vars: { read, write }, cells: arr.slice(), hi: doneUpTo(write), ptrs: { read, write }, note: "write moves to " + write + ". The kept part grew by one." });
+      } else {
+        frames.push({ line: 4, vars: { read, write, "arr[read]": x }, cells: arr.slice(), hi: doneUpTo(write, { [read]: "bad" }), ptrs: { read, write }, note: x + " is negative: skip it. Only read moves on." });
+      }
+    }
+    frames.push({ line: 9, vars: { write }, cells: arr.slice(), hi: doneUpTo(write, { 3: "dim", 4: "dim", 5: "dim" }), ptrs: { write }, note: "Done. The first " + write + " slots hold 3, 5, 7. The rest is leftover junk we can ignore or cut off." });
+    Lesson.trace("#readwrite", {
+      title: "drop the negatives",
+      code: [
+        "const n = arr.length;",
+        "let write = 0;",
+        "for (let read = 0; read < n; read++) {",
+        "  if (arr[read] >= 0) {",
+        "    arr[write] = arr[read];",
+        "    write++;",
+        "  }",
+        "}",
+        "// kept values: arr[0 .. write-1]",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>
