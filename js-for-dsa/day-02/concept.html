@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loops and Steps</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 2 of 10</p>
+  <h1>Loops and counting steps</h1>
+  <p class="lede">A loop repeats a few lines. Learn to follow it round by round, and to count how many rounds it takes.</p>
+  <nav class="daynav"><a href="../day-01/concept.html">← Day 1</a><a href="../day-03/concept.html">Day 3 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Two kinds of loop</h2>
+  <p>Use <code>for</code> when you know how many rounds you want. It has three parts: where to start, when to keep going, and what to do after each round.</p>
+<pre><code>for (let i = 1; i <= 3; i++) {
+  console.log(i);   // 1, then 2, then 3
+}</code></pre>
+  <p>Use <code>while</code> when you loop until something happens and you don't know the count in advance:</p>
+<pre><code>let n = 40;
+while (n > 1) {
+  n = Math.floor(n / 2);   // 20, 10, 5, 2, 1
+}</code></pre>
+  <p class="callout"><strong>Watch out:</strong> if the condition never becomes false, the loop never ends. Make sure something inside the loop moves you toward the exit.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. The accumulator pattern</h2>
+  <p>Most loop questions follow the same three-part shape: make a variable <b>before</b> the loop, update it <b>inside</b>, use it <b>after</b>.</p>
+<pre><code>let sum = 0;            // before: the "empty" answer
+for (let i = 1; i <= 4; i++) {
+  sum += i;             // inside: 1, 3, 6, 10
+}
+console.log(sum);       // after: 10</code></pre>
+  <p>Pick the right starting value: <code>0</code> for a sum, <code>1</code> for a product, <code>""</code> for a string, <code>[]</code> for a list.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: adding up squares</h2>
+  <p>Press <b>Play</b>, or step with <b>Next</b>. Watch the pointer <code>i</code> move one box per round while <code>total</code> grows.</p>
+  <div id="accumulate"></div>
+  <p>Change <code>i * i</code> to just <code>i</code> and you have Q1. Change <code>+=</code> to <code>*=</code> (and start at 1) and you have Q2.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. <code>break</code> and <code>continue</code></h2>
+  <p><code>continue</code> skips the rest of <b>this</b> round and jumps to the next one. <code>break</code> leaves the loop completely.</p>
+<pre><code>for (let i = 1; i <= 10; i++) {
+  if (i % 3 === 0) continue;   // skip 3, 6, 9
+  if (i > 7) break;            // stop for good at 8
+  console.log(i);              // 1, 2, 4, 5, 7
+}</code></pre>
+  <p>A variable made with <code>let</code> inside the <code>for (...)</code> disappears when the loop ends. If you need its value after a <code>break</code>, declare it before the loop:</p>
+<pre><code>let i;
+for (i = 2; i < 100; i++) {
+  if (i * i > 50) break;
+}
+console.log(i);   // 8, the first i with i * i > 50</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>5. Predict the output</h2>
+  <p>Trace each loop on paper first: one row per round, one column per variable. Then reveal.</p>
+  <details class="predict"><summary><code>let s = 0; for (let i = 0; i < 5; i++) s += 2;</code> then <code>s</code></summary><div><p><code>10</code>. The body runs 5 times (i = 0, 1, 2, 3, 4) and adds 2 each time. <code>i < 5</code> stops before 5.</p></div></details>
+  <details class="predict"><summary><code>let c = 0; for (let i = 1; i <= 10; i++) { if (i % 2 === 0) continue; c++; }</code> then <code>c</code></summary><div><p><code>5</code>. The even rounds are skipped, so only i = 1, 3, 5, 7, 9 reach <code>c++</code>.</p></div></details>
+  <details class="predict"><summary><code>let n = 100, r = 0; while (n > 0) { n -= 30; r++; }</code> then <code>r</code></summary><div><p><code>4</code>. n goes 70, 40, 10, -20. After the 4th round n is no longer &gt; 0.</p></div></details>
+  <details class="predict"><summary>How many times does <code>x++</code> run? <code>for (i = 0; i < 4; i++) for (j = 0; j < 3; j++) x++;</code></summary><div><p><code>12</code>. The inner loop runs fully (3 times) for each of the 4 outer rounds: 4 × 3.</p></div></details>
+  <details class="predict"><summary><code>let p = 1; for (let i = 1; i <= 4; i++) p *= i;</code> then <code>p</code></summary><div><p><code>24</code>. 1 × 1 × 2 × 3 × 4. If you had started <code>p</code> at 0 the answer would be 0 forever.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>6. Nested loops: visiting every pair</h2>
+  <p>Put a loop inside a loop and the inner one runs <b>completely</b> for each round of the outer one. Starting <code>j</code> at <code>i + 1</code> means each pair is visited once, and never a box with itself.</p>
+  <p>Here we count the pairs in <code>[3, 1, 4, 2]</code> that add up to 5. Watch <code>i</code> stay still while <code>j</code> slides past it.</p>
+  <div id="pairs"></div>
+  <p>4 boxes gave 6 pairs. For n boxes it's n × (n − 1) / 2 pairs, which is about n²/2. That's Q6.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>counting steps</h2>
+  <p>To know how fast code is, count how many times the loop body runs as n grows:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Loop</th><th>Body runs</th><th>Name</th></tr>
+    <tr><td><code>for (i = 1; i <= n; i++)</code></td><td>n times</td><td>O(n)</td></tr>
+    <tr><td>two nested loops up to n</td><td>about n × n</td><td>O(n²)</td></tr>
+    <tr><td><code>for (i = 1; i * i <= n; i++)</code></td><td>about √n</td><td>O(√n)</td></tr>
+  </table>
+  </div>
+  <p>Why can a loop stop at √n? Divisors come in pairs: if <code>i</code> divides 36, so does <code>36 / i</code>, and one of the two is always ≤ 6. So we only need to look at the small half:</p>
+  <div id="sqrt"></div>
+  <p>For n = 1,000,000: O(n²) is a trillion steps (too slow), O(n) is a million (fine), O(√n) is just a thousand. That is the trick inside Q8.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../day-03/concept.html">Next: Day 3 · functions, scope and helpers →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: the accumulator pattern, adding 1² + 2² + 3² + 4².
+  (function () {
+    const frames = [];
+    const nums = [1, 2, 3, 4];
+    let total = 0;
+    frames.push({ line: 1, vars: { total }, cells: nums, note: "Before the loop: total starts at 0, the empty sum." });
+    let i;
+    for (i = 1; i <= 4; i++) {
+      frames.push({ line: 2, vars: { total, i }, cells: nums, ptrs: { i: i - 1 }, hi: { [i - 1]: "active" }, note: i + " <= 4, so the body runs. Round " + i + "." });
+      const before = total;
+      total += i * i;
+      const hi = {};
+      for (let k = 0; k < i; k++) hi[k] = "done";
+      frames.push({ line: 3, vars: { total, i }, cells: nums, ptrs: { i: i - 1 }, hi, note: "total = " + before + " + " + i + " * " + i + " = " + total + "." });
+    }
+    frames.push({ line: 2, vars: { total, i }, cells: nums, hi: { 0: "done", 1: "done", 2: "done", 3: "done" }, note: "i is now 5, and 5 <= 4 is false, so the loop stops." });
+    frames.push({ line: 5, vars: { total }, cells: nums, hi: { 0: "done", 1: "done", 2: "done", 3: "done" }, note: "After the loop: total is " + total + ". The body ran 4 times for n = 4." });
+    Lesson.trace("#accumulate", {
+      title: "Sum of squares up to 4",
+      code: [
+        "let total = 0;",
+        "for (let i = 1; i <= 4; i++) {",
+        "  total += i * i;",
+        "}",
+        "console.log(total);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: nested loops visiting every pair i < j.
+  (function () {
+    const frames = [];
+    const a = [3, 1, 4, 2];
+    let count = 0, steps = 0;
+    frames.push({ line: 2, vars: { count, steps }, cells: a, note: "count starts at 0. steps will count how often the inner body runs." });
+    for (let i = 0; i < a.length; i++) {
+      frames.push({ line: 3, vars: { i, count, steps }, cells: a, ptrs: { i }, hi: { [i]: "active" }, note: "Outer round: i = " + i + ". Now j sweeps everything to the right of i." });
+      for (let j = i + 1; j < a.length; j++) {
+        steps++;
+        const sum = a[i] + a[j];
+        const hit = sum === 5;
+        if (hit) count++;
+        frames.push({
+          line: hit ? 6 : 5, vars: { i, j, count, steps }, cells: a, ptrs: { i, j },
+          hi: { [i]: "active", [j]: hit ? "found" : "compare" },
+          note: a[i] + " + " + a[j] + " = " + sum + (hit ? ". That's 5, so count becomes " + count + "." : ", not 5. Move j on."),
+        });
+      }
+    }
+    frames.push({ line: 9, vars: { count, steps }, cells: a, hi: { 0: "done", 1: "done", 2: "done", 3: "done" }, note: "Done: " + count + " pairs add to 5, and the inner body ran " + steps + " times for 4 boxes." });
+    Lesson.trace("#pairs", {
+      title: "Pairs that add to 5",
+      code: [
+        "const a = [3, 1, 4, 2];",
+        "let count = 0;",
+        "for (let i = 0; i < a.length; i++) {",
+        "  for (let j = i + 1; j < a.length; j++) {",
+        "    if (a[i] + a[j] === 5)",
+        "      count++;",
+        "  }",
+        "}",
+        "console.log(count);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: checking only up to √36 still finds every divisor pair.
+  (function () {
+    const frames = [];
+    const n = 36;
+    const tried = [];
+    const hi = {};
+    let found = 0;
+    frames.push({ line: 1, vars: { n }, cells: [], note: "We want every divisor of 36, but we will only try small i." });
+    let i;
+    for (i = 1; i * i <= n; i++) {
+      tried.push(i);
+      const idx = tried.length - 1;
+      if (n % i === 0) {
+        found++;
+        hi[idx] = "found";
+        const partner = n / i;
+        frames.push({ line: 3, vars: { i, "i * i": i * i, partner }, cells: tried.slice(), hi: Object.assign({}, hi), ptrs: { i: idx }, note: "36 % " + i + " is 0, so " + i + " and its partner " + partner + " are both divisors." });
+      } else {
+        hi[idx] = "bad";
+        frames.push({ line: 3, vars: { i, "i * i": i * i }, cells: tried.slice(), hi: Object.assign({}, hi), ptrs: { i: idx }, note: "36 % " + i + " is " + (n % i) + ", so " + i + " is not a divisor." });
+      }
+    }
+    frames.push({ line: 2, vars: { i, "i * i": i * i }, cells: tried, hi, note: i + " * " + i + " = " + (i * i) + " is more than 36, so stop. Any bigger divisor was already found as a partner." });
+    frames.push({ line: 6, vars: { rounds: tried.length }, cells: tried, hi, note: "Only " + tried.length + " rounds instead of 36, and we still found all 9 divisors (" + found + " pairs, 6 × 6 counted once)." });
+    Lesson.trace("#sqrt", {
+      title: "Divisor pairs of 36",
+      code: [
+        "const n = 36;",
+        "for (let i = 1; i * i <= n; i++) {",
+        "  if (n % i === 0) {",
+        "    // i and n / i are both divisors",
+        "  }",
+        "}",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

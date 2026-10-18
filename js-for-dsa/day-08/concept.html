@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map and Set</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 8 of 10</p>
+  <h1>Map and Set</h1>
+  <p class="lede">A <code>Set</code> answers "have I seen this?" in one step. A <code>Map</code> remembers something about each key. Together they turn slow O(n²) loops into fast O(n) ones.</p>
+  <nav class="daynav"><a href="../day-07/concept.html">← Day 7</a><a href="../day-09/concept.html">Day 9 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Set: values with no duplicates</h2>
+  <p>A Set is a bag that holds each value <b>at most once</b>. Adding something that is already inside does nothing.</p>
+<pre><code>const seen = new Set();
+seen.add(3);
+seen.add(5);
+seen.add(3);      // already there: nothing changes
+seen.has(3);      // true
+seen.has(9);      // false
+seen.size;        // 2   (size, not length)
+seen.delete(5);   // removes 5</code></pre>
+  <p>The famous one-liner to remove duplicates. The spread <code>...</code> turns the Set back into an array:</p>
+<pre><code>[...new Set([3, 1, 3, 2, 1])];   // [3, 1, 2]</code></pre>
+  <p class="callout"><strong>Order is kept.</strong> A Set remembers the order values were <b>first added</b>, so you get <code>[3, 1, 2]</code>, not a sorted list.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Map: key → value, any key type</h2>
+  <p>A Map is like the objects from Day 7, but made for lookups:</p>
+<pre><code>const age = new Map();
+age.set("ankit", 20);
+age.set("ravi", 25);
+age.get("ankit");   // 20
+age.get("mohan");   // undefined (missing key)
+age.has("ravi");    // true
+age.size;           // 2
+age.set(7, "seven");
+age.has("7");       // false: the key 7 stays a number</code></pre>
+  <p>The counting idiom you know from Day 7 looks like this with a Map:</p>
+<pre><code>count.set(x, (count.get(x) || 0) + 1);</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>3. Looping over a Set or Map</h2>
+  <p><code>for...of</code> walks them in insertion order. A Map gives you <code>[key, value]</code> pairs, so unpack them:</p>
+<pre><code>for (const x of seen) {
+  console.log(x);
+}
+for (const [name, years] of age) {
+  console.log(name, years);
+}
+[...age.keys()];     // ["ankit", "ravi", 7]
+[...age.values()];   // [20, 25, "seven"]</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>4. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>new Set([1, 1, 2, 2, 2]).size</code></summary><div><p><code>2</code>. Only the values 1 and 2 are inside. A Set never stores a value twice.</p></div></details>
+  <details class="predict"><summary><code>new Set("hello").size</code></summary><div><p><code>4</code>. A string is read letter by letter: h, e, l, o. The second <code>l</code> is a duplicate.</p></div></details>
+  <details class="predict"><summary><code>new Set([1, "1"]).size</code></summary><div><p><code>2</code>. The number 1 and the string "1" are different values (think <code>===</code>).</p></div></details>
+  <details class="predict"><summary><code>const m = new Map(); m.set("a", 1); m.set("a", 5); m.get("a")</code></summary><div><p><code>5</code>. Setting a key again <b>replaces</b> its value. The Map still has size 1.</p></div></details>
+  <details class="predict"><summary><code>new Map().get("x") || 0</code></summary><div><p><code>0</code>. <code>get</code> gives <code>undefined</code> for a missing key, and <code>undefined || 0</code> is <code>0</code>. That is why the counting idiom works the first time.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: which values repeat?</h2>
+  <p>A <code>seen</code> Set remembers everything we have already passed. If <code>x</code> is already inside, it's a repeat. Watch the two Sets in the variables.</p>
+  <div id="repeats"></div>
+  <p>Each value is checked with <code>seen.has(x)</code>, which is one quick step. Remove duplicates, find a repeat, check "have I seen this?": it's always this loop.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: counting votes with a Map</h2>
+  <p>The Map starts empty. Each vote either creates a key with count 1, or adds 1 to an existing key.</p>
+  <div id="votes"></div>
+  <p>The keys come out in the order they were first added: <code>red</code>, <code>blue</code>, <code>green</code>. That order is handy when a question says "on a tie, return the one seen first".</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Sliding window: a Set that moves</h2>
+  <p>Some questions look at a <b>piece</b> of a string or array that grows and shrinks. Keep two indexes, <code>left</code> and <code>right</code>, and a Set of what is inside the window:</p>
+<pre><code>// grow: take one more letter on the right
+inWindow.add(s[right]);
+// shrink: drop the letter on the left
+inWindow.delete(s[left]);
+left++;</code></pre>
+  <p>Each letter enters the window once and leaves at most once, so the whole walk is O(n). Q8 uses exactly these two moves. Day 9 shows a sliding window step by step.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>why lookups matter</h2>
+  <p><code>arr.includes(x)</code> walks the whole array: O(n). <code>set.has(x)</code> jumps straight to the answer: O(1). Inside a loop, that is the difference between these two:</p>
+<pre><code>// O(n²): includes walks the array every time
+for (const x of a) if (b.includes(x)) ...
+
+// O(n): build the Set once, then each has() is instant
+const inB = new Set(b);
+for (const x of a) if (inB.has(x)) ...</code></pre>
+  <p>For 100,000 values, the first does about 10,000,000,000 steps and the second about 200,000. Reaching for a Set or Map is the most common way to speed up a slow DSA solution.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one. Remember to return arrays, not Sets.</p>
+  <p><a href="../day-09/concept.html">Next: Day 9 · sorting, array methods and sliding window →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: find the values that repeat, using a seen Set.
+  (function () {
+    const arr = [4, 7, 4, 1, 7, 4];
+    const frames = [];
+    const seen = new Set(), repeats = new Set();
+    const hi = {};
+    frames.push({ line: 2, vars: { seen: new Set(seen), repeats: new Set(repeats) }, cells: arr, note: "Two empty Sets: one for what we've seen, one for the repeats." });
+    arr.forEach((x, i) => {
+      frames.push({ line: 4, vars: { x, seen: new Set(seen), repeats: new Set(repeats) }, cells: arr, hi: Object.assign({}, hi, { [i]: "active" }), ptrs: { i }, note: "Next value: x = " + x + "." });
+      if (seen.has(x)) {
+        frames.push({ line: 5, vars: { x, seen: new Set(seen), repeats: new Set(repeats) }, cells: arr, hi: Object.assign({}, hi, { [i]: "found" }), ptrs: { i }, note: "seen.has(" + x + ") is true: we met " + x + " before, so it's a repeat." });
+        const had = repeats.has(x);
+        repeats.add(x);
+        hi[i] = "found";
+        frames.push({ line: 5, vars: { x, seen: new Set(seen), repeats: new Set(repeats) }, cells: arr, hi: Object.assign({}, hi), ptrs: { i }, note: had ? x + " is already in repeats, so adding it again changes nothing." : "Add " + x + " to repeats." });
+      } else {
+        seen.add(x);
+        hi[i] = "done";
+        frames.push({ line: 6, vars: { x, seen: new Set(seen), repeats: new Set(repeats) }, cells: arr, hi: Object.assign({}, hi), ptrs: { i }, note: "seen.has(" + x + ") is false: first time. Add " + x + " to seen." });
+      }
+    });
+    frames.push({ line: 8, vars: { seen: new Set(seen), repeats: new Set(repeats), result: [...repeats] }, cells: arr, hi, note: "Done. Spread the Set into an array: [" + [...repeats].join(", ") + "]." });
+    Lesson.trace("#repeats", {
+      title: "Values that repeat",
+      code: [
+        "const arr = [4, 7, 4, 1, 7, 4];",
+        "const seen = new Set();",
+        "const repeats = new Set();",
+        "for (const x of arr) {",
+        "  if (seen.has(x)) repeats.add(x);",
+        "  else seen.add(x);",
+        "}",
+        "const result = [...repeats];",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: count votes with a Map.
+  (function () {
+    const votes = ["red", "blue", "red", "green", "blue", "red"];
+    const frames = [];
+    const count = new Map();
+    frames.push({ line: 3, cells: votes, map: new Map(count), vars: {}, note: "Start with an empty Map called count." });
+    votes.forEach((v, i) => {
+      const before = count.get(v);
+      frames.push({ line: 5, cells: votes, hi: { [i]: "active" }, ptrs: { i }, map: new Map(count), vars: { v, "count.get(v)": before }, note: before === undefined ? "\"" + v + "\" is not a key yet, so get gives undefined, and undefined || 0 is 0." : "\"" + v + "\" is already a key with count " + before + "." });
+      count.set(v, (before || 0) + 1);
+      frames.push({ line: 5, cells: votes, hi: { [i]: "done" }, ptrs: { i }, map: new Map(count), mhi: v, vars: { v, "count.get(v)": count.get(v) }, note: "Set \"" + v + "\" to " + count.get(v) + "." });
+    });
+    frames.push({ line: 7, cells: votes, map: new Map(count), vars: { "count.size": count.size }, note: "Done: " + [...count].map(([k, n]) => k + " " + n).join(", ") + ". 3 different colours, in first-seen order." });
+    Lesson.trace("#votes", {
+      title: "Counting votes",
+      mapLabel: "count (a Map)",
+      code: [
+        "const votes = [\"red\", \"blue\", \"red\",",
+        "               \"green\", \"blue\", \"red\"];",
+        "const count = new Map();",
+        "for (const v of votes) {",
+        "  count.set(v, (count.get(v) || 0) + 1);",
+        "}",
+        "count.size;  // 3",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

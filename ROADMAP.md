@@ -2,6 +2,10 @@
 
 A rough order, not a fixed calendar: repeat or split a topic whenever it needs more time. Java follows the same idea as JavaScript where it can, so each concept is seen twice in one day.
 
+## JS for DSA (10-day track)
+
+Before Phase 4, [`js-for-dsa/`](js-for-dsa) covers the JavaScript basics DSA needs, with an animated lesson each day: numbers and digits → loops and counting steps → functions → arrays → two pointers → strings → objects as hash maps → `Map` and `Set` → sorting and sliding window → 2D arrays, recursion and binary search. The advanced JavaScript in Phase 3 comes after it.
+
 ## Phase 1: Programming basics (both languages)
 
 | Day | JavaScript | Java |

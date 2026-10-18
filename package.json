@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test \"days/**/*.test.js\"",
+    "test": "node --test \"days/**/*.test.js\" \"js-for-dsa/**/*.test.js\"",
+    "test:dsa": "node --test \"js-for-dsa/**/*.test.js\"",
     "test:java": "bash scripts/run-java.sh",
     "new-day": "node scripts/new-day.js"
   }

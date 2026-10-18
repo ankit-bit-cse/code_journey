@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Working with Strings</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">JS for DSA · Day 6 of 10</p>
+  <h1>Strings</h1>
+  <p class="lede">A string is a row of characters you can read but never change. To get a different string, you build a new one.</p>
+  <nav class="daynav"><a href="../day-05/concept.html">← Day 5</a><a href="../day-07/concept.html">Day 7 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Reading a string like an array</h2>
+<pre><code>const s = "cat";
+s.length;           // 3
+s[0];               // "c"
+s[s.length - 1];    // "t"
+s[10];              // undefined (out of range, like arrays)
+
+for (const ch of s) {
+  console.log(ch);  // "c", then "a", then "t"
+}</code></pre>
+  <p>Use <code>for...of</code> when you only need the characters. Use a normal <code>for</code> loop when you also need the index <code>i</code>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Strings are immutable</h2>
+  <p>"Immutable" means it can't be changed. Writing into a string does nothing:</p>
+<pre><code>let s = "cat";
+s[0] = "b";        // silently ignored
+s;                 // still "cat"
+
+s = "b" + s.slice(1);   // build a NEW string instead
+s;                      // "bat"</code></pre>
+  <p class="callout"><strong>Need to edit in place?</strong> Turn it into an array with <code>s.split("")</code>, change the array, then glue it back with <code>.join("")</code>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. The methods you will use most</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Code</th><th>Result</th><th>What it does</th></tr>
+    <tr><td><code>"Hi".toLowerCase()</code></td><td><code>"hi"</code></td><td>all lower case</td></tr>
+    <tr><td><code>"Hi".toUpperCase()</code></td><td><code>"HI"</code></td><td>all upper case</td></tr>
+    <tr><td><code>"Hello".slice(1, 4)</code></td><td><code>"ell"</code></td><td>from 1 up to (not including) 4</td></tr>
+    <tr><td><code>"a b c".split(" ")</code></td><td><code>["a", "b", "c"]</code></td><td>cut into an array</td></tr>
+    <tr><td><code>["a", "b"].join("-")</code></td><td><code>"a-b"</code></td><td>glue an array into a string</td></tr>
+    <tr><td><code>"a".charCodeAt(0)</code></td><td><code>97</code></td><td>the character's number code</td></tr>
+    <tr><td><code>String.fromCharCode(98)</code></td><td><code>"b"</code></td><td>number code back to a character</td></tr>
+  </table>
+  </div>
+  <p>Letters <code>"a"</code> to <code>"z"</code> have the codes 97 to 122, in order. Digits <code>"0"</code> to <code>"9"</code> are 48 to 57. That's why <code>"a" &lt; "b"</code> is true, and why <code>c &gt;= "0" &amp;&amp; c &lt;= "9"</code> tests for a digit.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>"hello"[1]</code></summary><div><p><code>"e"</code>. Indexes start at 0, just like arrays.</p></div></details>
+  <details class="predict"><summary><code>"abc".split("")</code></summary><div><p><code>["a", "b", "c"]</code>. Splitting on the empty string gives one character per slot.</p></div></details>
+  <details class="predict"><summary><code>"Zebra" &lt; "apple"</code></summary><div><p><code>true</code>! Capital letters (65 to 90) come before lower case letters (97 to 122). Lower-case both sides first if case shouldn't matter.</p></div></details>
+  <details class="predict"><summary><code>"5" + 3</code> and <code>"5" - 3</code></summary><div><p><code>"53"</code> and <code>2</code>. <code>+</code> with a string glues; <code>-</code> turns the string into a number. Keep numbers and strings apart.</p></div></details>
+  <details class="predict"><summary><code>String.fromCharCode("y".charCodeAt(0) + 2)</code></summary><div><p><code>"{"</code>, not <code>"a"</code>. Codes don't wrap around by themselves. To wrap, use <code>% 26</code> on the position 0 to 25 (Q8).</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: building a string backwards</h2>
+  <p>We walk <code>i</code> from the last character to the first and add each one to <code>out</code>, but we <b>skip spaces</b>. Every <code>+=</code> creates a brand new string.</p>
+  <div id="backwards"></div>
+  <p>Remove the space check and this is Q1. For long strings, push characters into an array and <code>join("")</code> once at the end.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: counting runs</h2>
+  <p>A <b>run</b> is the same character several times in a row. Here we find the longest run in <code>"aabbbc"</code>. The trick: compare each character with the one <b>just before it</b>.</p>
+  <div id="runs"></div>
+  <p>Same loop, different bookkeeping: instead of remembering only the best run, write down every run as it ends and you have <code>compress</code> (Q6).</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>strings are arrays you can't edit</h2>
+  <p>Everything you learned on Days 4 and 5 works on strings: linear scans, left/right pointers for palindromes, and run counting. The one difference is that <code>s[i] = x</code> never works.</p>
+<pre><code>const arr = s.split("");   // O(n): now you can swap
+// ... two pointers, swaps ...
+const t = arr.join("");    // O(n): back to a string</code></pre>
+  <p>Watch out for hidden costs: <code>slice</code>, <code>split</code>, <code>join</code> and <code>toLowerCase</code> each walk the whole string, so they are O(n). Call them once, before the loop, not inside it.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>npm test</code> after each one.</p>
+  <p><a href="../day-07/concept.html">Next: Day 7 · objects as hash maps →</a></p>
+</footer>
+
+</main>
+<script src="../assets/lesson.js"></script>
+<script>
+  // Trace 1: build "go on" backwards, skipping spaces.
+  (function () {
+    const frames = [];
+    const s = "go on";
+    const cells = s.split("").map((c) => (c === " " ? "␣" : c));
+    let out = "";
+    const dimAfter = (i) => Object.fromEntries(cells.map((_, k) => [k, k > i ? "dim" : undefined]).filter((e) => e[1]));
+    frames.push({ line: 1, vars: { out }, cells, note: "out starts as the empty string \"\"." });
+    for (let i = s.length - 1; i >= 0; i--) {
+      frames.push({ line: 2, vars: { i, "s[i]": s[i], out }, cells, ptrs: { i }, hi: Object.assign(dimAfter(i), { [i]: "compare" }), note: "i = " + i + ", s[i] is " + (s[i] === " " ? "a space" : "\"" + s[i] + "\"") + "." });
+      if (s[i] === " ") {
+        frames.push({ line: 3, vars: { i, "s[i]": s[i], out }, cells, ptrs: { i }, hi: Object.assign(dimAfter(i), { [i]: "bad" }), note: "It's a space, so continue: skip it and go to the next i." });
+        continue;
+      }
+      out += s[i];
+      frames.push({ line: 4, vars: { i, "s[i]": s[i], out }, cells, ptrs: { i }, hi: Object.assign(dimAfter(i), { [i]: "active" }), note: "out += \"" + s[i] + "\" builds a NEW string: \"" + out + "\"." });
+    }
+    frames.push({ line: 6, vars: { out }, cells, hi: { 0: "done", 1: "done", 2: "dim", 3: "done", 4: "done" }, note: "i went below 0, so the loop ends. out is \"" + out + "\", and s is still \"go on\": we never changed it." });
+    Lesson.trace("#backwards", {
+      title: "\"go on\" backwards, no spaces",
+      code: [
+        "let out = \"\";",
+        "for (let i = s.length - 1; i >= 0; i--) {",
+        "  if (s[i] === \" \") continue;",
+        "  out += s[i];",
+        "}",
+        "// out is the answer",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: longest run of one character in "aabbbc".
+  (function () {
+    const frames = [];
+    const s = "aabbbc";
+    const cells = s.split("");
+    let run = 1, best = 1, bestChar = s[0];
+    const runHi = (i, run, state) => Object.fromEntries(Array.from({ length: run }, (_, k) => [i - k, state]));
+    frames.push({ line: 1, vars: { run, best, bestChar }, cells, ptrs: { i: 0 }, hi: { 0: "active" }, note: "The first character is a run of length 1 on its own." });
+    for (let i = 1; i < s.length; i++) {
+      if (s[i] === s[i - 1]) {
+        run++;
+        frames.push({ line: 3, vars: { i, run, best, bestChar }, cells, ptrs: { "i-1": i - 1, i }, hi: runHi(i, run, "active"), note: "\"" + s[i] + "\" === \"" + s[i - 1] + "\": same as the one before, so the run grows to " + run + "." });
+      } else {
+        run = 1;
+        frames.push({ line: 4, vars: { i, run, best, bestChar }, cells, ptrs: { "i-1": i - 1, i }, hi: { [i - 1]: "compare", [i]: "active" }, note: "\"" + s[i] + "\" is different from \"" + s[i - 1] + "\": a new run starts, run = 1." });
+      }
+      if (run > best) {
+        best = run;
+        bestChar = s[i];
+        frames.push({ line: 6, vars: { i, run, best, bestChar }, cells, ptrs: { i }, hi: runHi(i, run, "found"), note: "run " + run + " beats the best so far. Remember best = " + best + ", bestChar = \"" + bestChar + "\"." });
+      }
+    }
+    frames.push({ line: 9, vars: { best, bestChar }, cells, hi: { 2: "done", 3: "done", 4: "done" }, note: "Done in one pass: the longest run is \"" + bestChar + "\" × " + best + "." });
+    Lesson.trace("#runs", {
+      title: "longest run in \"aabbbc\"",
+      code: [
+        "let run = 1, best = 1, bestChar = s[0];",
+        "for (let i = 1; i < s.length; i++) {",
+        "  if (s[i] === s[i - 1]) run++;",
+        "  else run = 1;",
+        "  if (run > best) {",
+        "    best = run; bestChar = s[i];",
+        "  }",
+        "}",
+        "// best is the answer",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>
