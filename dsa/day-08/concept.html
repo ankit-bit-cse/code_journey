@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merge Sort</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 8</p>
+  <h1>Merge sort: divide and conquer</h1>
+  <p class="lede">Bubble, selection and insertion sort all hit O(n²). Merge sort beats them with one idea: two sorted halves can be merged in a single pass. Split, sort each half recursively, merge. O(n log n), every time.</p>
+  <nav class="daynav"><a href="../day-07/concept.html">← Day 7</a><a href="../day-09/concept.html">Day 9 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Divide and conquer</h2>
+  <p>A big new way of thinking, built on the recursion from Days 3–5:</p>
+  <ol>
+    <li><b>Divide</b> the problem into smaller problems of the same kind,</li>
+    <li><b>conquer</b> each one recursively (a tiny one is a base case), and</li>
+    <li><b>combine</b> their answers into the answer for the whole.</li>
+  </ol>
+  <p>For sorting: split the array in half, sort the left half, sort the right half, then combine them. A one-item array is already sorted, which is the base case. All the real work happens in the combine step: <b>merge</b>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Merging two sorted arrays</h2>
+  <p>If <code>a</code> and <code>b</code> are both sorted, the smallest value left anywhere is at the front of <code>a</code> or at the front of <code>b</code>. So compare only the two fronts, take the smaller, and move that pointer on.</p>
+<pre><code>function merge(a, b) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i &lt; a.length &amp;&amp; j &lt; b.length) {
+    if (a[i] &lt;= b[j]) out.push(a[i++]);
+    else out.push(b[j++]);
+  }
+  while (i &lt; a.length) out.push(a[i++]);   // leftovers of a
+  while (j &lt; b.length) out.push(b[j++]);   // leftovers of b
+  return out;
+}</code></pre>
+  <p>Below, the first four boxes are <code>a</code> and the last three are <code>b</code>. Taken values fade out. Each value is pushed once, so merging is <b>O(n + m)</b>.</p>
+  <div id="merge"></div>
+  <p class="callout"><strong>Don't forget the leftovers.</strong> The main loop stops as soon as ONE array is used up. Without the two little loops at the end, you silently lose the rest of the other array. And use <code>&lt;=</code>, not <code>&lt;</code>: on a tie take from <code>a</code> first, so equal values keep their order and merge sort is <b>stable</b>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Merge sort</h2>
+<pre><code>function mergeSort(arr) {
+  if (arr.length &lt;= 1) return arr.slice();      // base case: already sorted
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));    // trust the recursion
+  const right = mergeSort(arr.slice(mid));
+  return merge(left, right);                    // combine
+}</code></pre>
+  <p>Read it with the recursion mindset from Day 3: <b>don't</b> follow every call in your head. Assume <code>mergeSort</code> correctly sorts a smaller array; then all this call has to do is merge two sorted halves, and you already know merge is right.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Watch it run: split, then merge</h2>
+  <p>The same algorithm, passing indices instead of slicing (the trick from Day 4): <code>mergeSort(arr, lo, hi)</code> sorts <code>arr[lo..hi-1]</code>. The highlighted boxes are the piece the current call works on; the stack on the right shows which calls are waiting.</p>
+  <div id="stages"></div>
+  <p>Notice the order: the left half is <b>completely</b> sorted before the right half is even split. That's the call stack at work, exactly like the recursion traces on Days 3–5.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Why O(n log n)</h2>
+  <p>Draw every call as a box in a tree, one row per level (n = 8):</p>
+<pre><code>level 0:  [8 items]                          merge work: 8
+level 1:  [4]        [4]                     merge work: 4 + 4 = 8
+level 2:  [2]  [2]   [2]  [2]                merge work: 8
+level 3:  [1][1][1][1][1][1][1][1]           base cases, no merging</code></pre>
+  <ul>
+    <li><b>How many levels?</b> Each level halves the pieces, so it takes log₂ n levels to get down to 1 item (8 → 4 → 2 → 1: 3 levels).</li>
+    <li><b>Work per level?</b> The pieces on one level hold all n items between them, and merging is linear, so O(n) per level.</li>
+  </ul>
+  <p>Total: <b>log n levels × n work = O(n log n)</b>. It doesn't care what the input looks like: sorted, reversed or random, the tree has the same shape. Best, average and worst case are all O(n log n).</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>n</th><th>n² (insertion, worst)</th><th>n log₂ n (merge)</th></tr>
+    <tr><td>1,000</td><td>1,000,000</td><td>≈ 10,000</td></tr>
+    <tr><td>1,000,000</td><td>1,000,000,000,000</td><td>≈ 20,000,000</td></tr>
+  </table>
+  </div>
+  <p class="callout"><strong>The price is memory.</strong> Every merge builds a new array, so merge sort needs <b>O(n)</b> extra space (plus O(log n) for the call stack). Insertion sort needed O(1). And with slicing, every call also copies its half: still O(n) per level, so the total stays O(n log n).</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Bonus: counting inversions while you merge</h2>
+  <p>An <b>inversion</b> is a pair <code>i &lt; j</code> with <code>arr[i] &gt; arr[j]</code>: a pair in the wrong order. Yesterday you saw that insertion sort makes exactly one shift per inversion. Counting them with two loops is O(n²). Merge sort can count them in O(n log n):</p>
+<pre><code>left = [2, 4]   right = [1, 3]
+take 1 from right: 2 and 4 are still waiting in left, and both are &gt; 1  → +2
+take 2 from left
+take 3 from right: 4 is still waiting in left                        → +1
+take 4 from left                                                     → total 3</code></pre>
+  <p>When you take <code>right[j]</code> before <code>left[i]</code>, every value from <code>left[i]</code> to the end of left is bigger (left is sorted), so you count <code>left.length - i</code> inversions <b>in one step</b>. Add the inversions inside left and inside right (found by the recursive calls) and you have them all.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Predict the output</h2>
+  <p>Work it out first, then reveal.</p>
+  <details class="predict"><summary><code>merge([1, 5, 6], [2, 3])</code>: how many comparisons does the main loop make?</summary><div><p><code>3</code>: (1, 2) take 1, (5, 2) take 2, (5, 3) take 3. Now b is used up, the loop stops, and 5 and 6 are copied with no comparisons at all. Merging n + m items takes at most n + m − 1 comparisons, often fewer.</p></div></details>
+  <details class="predict"><summary>How many levels of splitting for 16 items? For 17?</summary><div><p><code>4</code> and <code>5</code>. 16 → 8 → 4 → 2 → 1 is 4 halvings. 17 splits into 8 and 9, and the 9 needs one extra level: 9 → 5 → 3 → 2 → 1.</p></div></details>
+  <details class="predict"><summary>Merge sort on an already sorted array of 1,000 items vs insertion sort on it: which does less work?</summary><div><p>Insertion sort! On sorted input it's O(n): about 1,000 comparisons. Merge sort always builds its full tree: about 10,000 operations. Big-O is about the worst case; know your input.</p></div></details>
+  <details class="predict"><summary>What does <code>mergeSort</code> do without the base case, on <code>[7]</code>?</summary><div><p>It splits <code>[7]</code> into <code>[]</code> and <code>[7]</code>, and calls itself on <code>[7]</code> again. Forever, until <code>RangeError: Maximum call stack size exceeded</code>. The base case <code>length &lt;= 1</code> handles both <code>[]</code> and one item.</p></div></details>
+  <details class="predict"><summary>How many inversions does <code>[4, 3, 2, 1]</code> have?</summary><div><p><code>6</code>: every one of the 4 × 3 / 2 pairs is in the wrong order. Reverse sorted is the maximum, n(n−1)/2.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where this shows up</h2>
+  <p><b>Interviews:</b> "merge two sorted arrays / lists", "merge k sorted lists", "sorted squares", "intersection of two arrays", "count inversions" and "merge intervals" are all this merge step with two pointers. "Sort a linked list" is merge sort, because linked lists can't jump to the middle cheaply but merge beautifully.</p>
+  <p><b>Later topics:</b> divide and conquer comes back in binary search (Days 10–12: keep only one half), in trees (a node, its left subtree, its right subtree) and in many "split the problem in two" problems. Merging k lists efficiently needs a heap, in Phase 3.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. What's next</h2>
+  <p>Merge sort does its work <b>after</b> the recursive calls (the merge). Tomorrow, <b>quick sort</b> flips that: it does the work <b>before</b> (a partition around a pivot), then sorts the two sides, with no merge at all, in place, and usually even faster in practice.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. No <code>.sort()</code> today. Run <code>./check.sh dsa 8</code> after each one.</p>
+  <p><a href="../index.html">All days →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: merging two sorted arrays with pointers i and j.
+  (function () {
+    const a = [2, 5, 8, 9], b = [1, 3, 6];
+    const cells = a.concat(b);
+    const frames = [];
+    const out = [];
+    let i = 0, j = 0, comparisons = 0;
+    const taken = {};
+    const ptrs = () => {
+      const p = {};
+      p.i = i < a.length ? i : -1;
+      p.j = j < b.length ? a.length + j : -1;
+      return p;
+    };
+    const hi = (extra) => Object.assign({}, taken, extra || {});
+    frames.push({ line: 2, cells, hi: hi(), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: "a = [" + a.join(", ") + "] (boxes 0–3) and b = [" + b.join(", ") + "] (boxes 4–6) are each sorted. i and j start at their fronts." });
+    while (i < a.length && j < b.length) {
+      comparisons++;
+      const ai = a[i], bj = b[j];
+      frames.push({ line: 5, cells, hi: hi({ [i]: "compare", [a.length + j]: "compare" }), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: "Compare the fronts: a[" + i + "] = " + ai + " vs b[" + j + "] = " + bj + "." });
+      if (ai <= bj) {
+        taken[i] = "dim"; out.push(ai); i++;
+        frames.push({ line: 5, cells, hi: hi({ [i - 1]: "found" }), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: ai + " <= " + bj + ": push " + ai + " from a, i moves to " + i + "." });
+      } else {
+        taken[a.length + j] = "dim"; out.push(bj); j++;
+        frames.push({ line: 6, cells, hi: hi({ [a.length + j - 1]: "found" }), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: bj + " < " + ai + ": push " + bj + " from b, j moves to " + j + "." });
+      }
+    }
+    const fromA = i < a.length;
+    frames.push({ line: fromA ? 8 : 9, cells, hi: hi(), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: (fromA ? "b" : "a") + " is used up, so the main loop stops. What's left in " + (fromA ? "a" : "b") + " is sorted and bigger than everything in out: copy it, no comparisons needed." });
+    while (i < a.length) { taken[i] = "dim"; out.push(a[i]); i++; frames.push({ line: 8, cells, hi: hi({ [i - 1]: "found" }), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: "Leftover: push " + a[i - 1] + "." }); }
+    while (j < b.length) { taken[a.length + j] = "dim"; out.push(b[j]); j++; frames.push({ line: 9, cells, hi: hi({ [a.length + j - 1]: "found" }), ptrs: ptrs(), vars: { i, j, out: out.slice(), comparisons }, note: "Leftover: push " + b[j - 1] + "." }); }
+    frames.push({ line: 10, cells, hi: hi(), ptrs: {}, vars: { out: out.slice(), comparisons }, note: "out = [" + out.join(", ") + "]: " + cells.length + " values pushed with only " + comparisons + " comparisons. Linear: O(n + m)." });
+    Lesson.trace("#merge", {
+      stacked: true,
+      title: "merge([2, 5, 8, 9], [1, 3, 6])",
+      code: [
+        "function merge(a, b) {",
+        "  const out = []; let i = 0, j = 0;",
+        "  while (i < a.length && j < b.length) {",
+        "    // compare the two fronts",
+        "    if (a[i] <= b[j]) out.push(a[i++]);",
+        "    else out.push(b[j++]);",
+        "  }",
+        "  while (i < a.length) out.push(a[i++]);",
+        "  while (j < b.length) out.push(b[j++]);",
+        "  return out;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: the split / merge stages of merge sort, with the call stack.
+  (function () {
+    const arr = [38, 27, 43, 3, 9, 82, 10];
+    const frames = [];
+    const stack = [];
+    let merges = 0;
+    const range = (lo, hi, state) => {
+      const h = {};
+      arr.forEach((_, k) => { h[k] = k >= lo && k < hi ? state : "dim"; });
+      return h;
+    };
+    const snap = (line, note, lo, hi, state, vars, ptrs) => {
+      frames.push({
+        line, cells: arr.slice(), hi: range(lo, hi, state), ptrs: ptrs || {},
+        map: new Map(stack.map((s) => [s.label, s.state])),
+        mhi: stack.length ? stack[stack.length - 1].label : null,
+        vars: Object.assign({ depth: stack.length - 2, merges }, vars), note,
+      });
+    };
+    function ms(lo, hi) {
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "sort(" + lo + ".." + (hi - 1) + ")", state: "running" });
+      const piece = "[" + arr.slice(lo, hi).join(", ") + "]";
+      if (hi - lo <= 1) {
+        stack[stack.length - 1].state = "base case";
+        snap(2, "sort(" + lo + ".." + (hi - 1) + ") has 1 item, " + piece + ": already sorted. Return straight away.", lo, hi, "compare", { lo, hi }, { lo });
+        stack.pop();
+        stack[stack.length - 1].state = "running";
+        return;
+      }
+      const mid = Math.floor((lo + hi) / 2);
+      snap(3, "sort(" + lo + ".." + (hi - 1) + ") gets " + piece + ". Split at mid = " + mid + ": left is " + lo + ".." + (mid - 1) + ", right is " + mid + ".." + (hi - 1) + ".", lo, hi, "active", { lo, mid, hi }, { lo, mid, hi });
+      ms(lo, mid);
+      ms(mid, hi);
+      const L = arr.slice(lo, mid), R = arr.slice(mid, hi);
+      const merged = [];
+      let i = 0, j = 0;
+      while (i < L.length && j < R.length) merged.push(L[i] <= R[j] ? L[i++] : R[j++]);
+      while (i < L.length) merged.push(L[i++]);
+      while (j < R.length) merged.push(R[j++]);
+      merged.forEach((v, k) => { arr[lo + k] = v; });
+      merges++;
+      stack[stack.length - 1].state = "merged";
+      snap(6, "Both halves are sorted. Merge [" + L.join(", ") + "] and [" + R.join(", ") + "] into [" + merged.join(", ") + "].", lo, hi, "done", { lo, mid, hi }, { lo, mid, hi });
+      stack.pop();
+      if (stack.length) stack[stack.length - 1].state = "running";
+    }
+    stack.push({ label: "main", state: "running" });
+    frames.push({ line: 8, cells: arr.slice(), hi: {}, ptrs: {}, map: new Map([["main", "running"]]), mhi: "main", vars: { merges }, note: "Sort [" + arr.join(", ") + "]: 7 items, so we call mergeSort(arr, 0, 7)." });
+    ms(0, arr.length);
+    const done = {}; arr.forEach((_, k) => { done[k] = "found"; });
+    frames.push({ line: 8, cells: arr.slice(), hi: done, ptrs: {}, map: new Map([["main", "running"]]), mhi: "main", vars: { merges }, note: "Sorted with " + merges + " merges. The deepest calls were at depth 3: ⌈log₂ 7⌉ = 3 levels of splitting, as in Q3." });
+    Lesson.trace("#stages", {
+      stacked: true,
+      title: "mergeSort on 7 items",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function mergeSort(arr, lo, hi) {   // sorts arr[lo..hi-1]",
+        "  if (hi - lo <= 1) return;           // base case",
+        "  const mid = Math.floor((lo + hi) / 2);",
+        "  mergeSort(arr, lo, mid);            // left half",
+        "  mergeSort(arr, mid, hi);            // right half",
+        "  mergeInto(arr, lo, mid, hi);        // combine",
+        "}",
+        "mergeSort(arr, 0, arr.length);",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

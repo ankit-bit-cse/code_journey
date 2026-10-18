@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bubble and Selection Sort</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 6</p>
+  <h1>Bubble sort and selection sort</h1>
+  <p class="lede">Until now <code>.sort()</code> did the work. Today you look inside: two simple sorts, step by step, counting every comparison and every swap.</p>
+  <nav class="daynav"><a href="../day-05/concept.html">← Day 5</a><a href="../day-07/concept.html">Day 7 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Words for sorting</h2>
+  <div class="table-wrap"><table>
+    <tr><th>word</th><th>meaning</th></tr>
+    <tr><td><b>comparison</b></td><td>look at two values and ask which is bigger. We count these to measure a sort.</td></tr>
+    <tr><td><b>swap</b></td><td>exchange two values: <code>[a[i], a[j]] = [a[j], a[i]];</code></td></tr>
+    <tr><td><b>pass</b></td><td>one walk through (part of) the array</td></tr>
+    <tr><td><b>in place</b></td><td>the sort only moves values inside the array: O(1) extra space</td></tr>
+    <tr><td><b>stable</b></td><td>equal values keep the order they had before sorting</td></tr>
+  </table></div>
+  <p>Why learn slow sorts when <code>.sort()</code> exists? Because their ideas come back everywhere: "push the biggest to the end", "pick the smallest of the rest", "count the swaps", "stop early when nothing changes". And interviewers love to ask what a sort costs and whether it is stable.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Bubble sort: the biggest bubbles to the end</h2>
+  <p>Walk from left to right and compare each pair of <b>neighbours</b>. If the left one is bigger, swap them. The biggest value gets picked up and carried along until it reaches the end: one <b>pass</b> puts it in its final place.</p>
+<pre><code>[5, 1, 4, 2]     5 &gt; 1 swap
+[1, 5, 4, 2]     5 &gt; 4 swap
+[1, 4, 5, 2]     5 &gt; 2 swap
+[1, 4, 2, 5]     pass done: 5 is final</code></pre>
+  <p>Then do it again on the part that is not final yet. Pass <code>i</code> (from 0) leaves <code>i + 1</code> values finished at the end, so its inner loop can stop at <code>j &lt; n - 1 - i</code>. After n - 1 passes everything is in place.</p>
+  <p class="callout"><strong>Off by one.</strong> The inner loop reads <code>a[j + 1]</code>, so <code>j</code> must stop at <code>n - 2</code>. Write <code>j &lt; n - 1</code>, not <code>j &lt; n</code>, or the last comparison reads <code>undefined</code>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: bubble sort with early exit</h2>
+  <p>The two arrows are the pair being compared. Yellow means "comparing", green is the finished tail growing from the right. Keep an eye on <code>swapped</code>: when a whole pass ends with it still <code>false</code>, the array is sorted and we stop early.</p>
+  <div id="bubble"></div>
+  <p>A plain bubble sort would do 5 passes here. The early exit stopped after 3, because the third pass found nothing to fix.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Best case, worst case, and counting swaps</h2>
+  <ul>
+    <li><b>Already sorted:</b> the first pass makes no swap, so with the early exit it is <b>1 pass, n - 1 comparisons: O(n)</b>.</li>
+    <li><b>Reversed:</b> every comparison swaps and no pass can stop early: n(n-1)/2 comparisons and swaps, <b>O(n²)</b>.</li>
+    <li><b>Average:</b> still O(n²).</li>
+  </ul>
+  <p>Each swap fixes exactly <b>one</b> pair of values that were in the wrong order. Such a pair is called an <b>inversion</b>. So bubble sort's number of swaps is exactly the number of inversions: <code>[3, 1, 2]</code> has 2 (3 before 1, 3 before 2), and bubble sort makes 2 swaps on it.</p>
+  <p class="callout"><strong>Stable for free.</strong> Bubble sort only swaps when the left value is <b>strictly</b> bigger, and only next-door neighbours. Two equal values never jump over each other, so their order is kept. Change <code>&gt;</code> to <code>&gt;=</code> and it is no longer stable (and does useless swaps).</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Selection sort: pick the smallest of the rest</h2>
+  <p>A different idea. For each position <code>i</code> from the left: <b>find</b> the smallest value in <code>a[i..]</code>, then <b>swap</b> it into position <code>i</code>. Remember the <b>index</b> of the smallest so far (not the value), so you know where to swap from.</p>
+<pre><code>[7, 4, 9, 2]    smallest of all is 2 (index 3): swap with index 0
+[2, 4, 9, 7]    smallest of a[1..] is 4: already there, swap with itself
+[2, 4, 9, 7]    smallest of a[2..] is 7: swap with index 2
+[2, 4, 7, 9]    done</code></pre>
+  <p><b>Invariant:</b> before step <code>i</code>, <code>a[0..i-1]</code> holds the <code>i</code> smallest values, in order, and they never move again.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: selection sort with a min pointer</h2>
+  <p><code>i</code> marks the place to fill, <code>j</code> scans the rest, and <code>min</code> jumps whenever <code>j</code> finds something smaller. One swap at the end of each step.</p>
+  <div id="selection"></div>
+  <p>15 comparisons for 6 values, n(n-1)/2, and it would be exactly the same for a sorted array: selection sort can't stop early. But it made only 4 swaps (never more than n - 1).</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Selection sort is not stable</h2>
+  <p>Label two equal values so you can tell them apart: <code>2a</code> and <code>2b</code>. Watch the long jump in the first step:</p>
+<pre><code>[2a, 2b, 1]     smallest is 1 (index 2): swap it with index 0
+[1, 2b, 2a]     2a jumped over 2b!
+                the 2s are now in the wrong order, and nothing moves them back</code></pre>
+  <p>With numbers you can't see the difference, but when you sort people by age, or orders by date, an unstable sort can shuffle the ones that tie. Tomorrow's insertion sort is stable, and so is JavaScript's <code>.sort()</code>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary>One bubble pass on <code>[4, 3, 2, 1]</code></summary><div><p><code>[3, 2, 1, 4]</code>. The 4 is carried all the way to the end; everything else moves only one place left.</p></div></details>
+  <details class="predict"><summary>Bubble sort with early exit on <code>[1, 2, 3, 4, 5]</code>: how many passes and comparisons?</summary><div><p><b>1 pass, 4 comparisons.</b> No swap in the first pass, so it stops. That is the O(n) best case.</p></div></details>
+  <details class="predict"><summary>How many swaps does bubble sort make on <code>[2, 3, 1]</code>?</summary><div><p><code>2</code>. The inversions are (2, 1) and (3, 1).</p></div></details>
+  <details class="predict"><summary>Selection sort on <code>[1, 2, 3, 4, 5]</code>: how many comparisons?</summary><div><p><code>10</code> = 4 + 3 + 2 + 1. It still scans the whole rest every step, because it can't know the rest is sorted.</p></div></details>
+  <details class="predict"><summary>After 2 steps of selection sort, <code>[8, 5, 9, 1, 3]</code> is…</summary><div><p><code>[1, 3, 9, 8, 5]</code>. Step 0 swaps 1 into front, step 1 swaps 3 into index 1. The first 2 values are already the 2 smallest, in order.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>9. Side by side</h2>
+  <div class="table-wrap"><table>
+    <tr><th></th><th>bubble (early exit)</th><th>selection</th></tr>
+    <tr><td>comparisons</td><td>n - 1 to n(n-1)/2</td><td>always n(n-1)/2</td></tr>
+    <tr><td>swaps</td><td>= inversions (up to n(n-1)/2)</td><td>at most n - 1</td></tr>
+    <tr><td>best case</td><td>O(n), sorted input</td><td>O(n²)</td></tr>
+    <tr><td>worst case</td><td>O(n²), reversed input</td><td>O(n²)</td></tr>
+    <tr><td>extra space</td><td>O(1)</td><td>O(1)</td></tr>
+    <tr><td>stable</td><td>yes</td><td>no</td></tr>
+  </table></div>
+  <p class="callout"><strong>Don't change the input.</strong> Today's questions return a sorted <b>copy</b>. <code>const a = [...arr];</code> first, then swap inside <code>a</code>. The copy is O(n) space, but the sort itself is still in place.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where these ideas come back</h2>
+  <p>Nobody ships bubble sort, but interviews ask about its pieces. <b>"How many swaps / inversions?"</b> comes back on Day 8, where merge sort counts inversions in O(n log n) instead of O(n²). <b>Stopping selection sort after k steps</b> is the first answer to <i>K smallest elements</i>; quickselect (Day 9) and heaps (Phase 4) do it faster. <b>"Fewest swaps"</b> is selection sort's strength: when writing to memory is expensive, n - 1 swaps beats n². And the stability question decides which sort you may use when sorting records by several keys, which is tomorrow's topic.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 6</code> after each one.</p>
+  <p><a href="../day-07/concept.html">Next: Day 7 · insertion sort, stability, counting sort →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: bubble sort with early exit on [4, 1, 3, 2, 6, 5].
+  (function () {
+    const a = [4, 1, 3, 2, 6, 5];
+    const n = a.length;
+    const frames = [];
+    let comparisons = 0, swaps = 0, sortedFrom = n;
+    const tail = (extra) => {
+      const hi = {};
+      for (let k = sortedFrom; k < n; k++) hi[k] = "done";
+      return Object.assign(hi, extra || {});
+    };
+    frames.push({ line: 1, cells: a.slice(), hi: tail(), vars: { comparisons, swaps }, note: "Sort [" + a.join(", ") + "] from small to big. At most n - 1 = " + (n - 1) + " passes." });
+    let i = 0;
+    for (; i < n - 1; i++) {
+      let swapped = false;
+      frames.push({ line: 2, cells: a.slice(), hi: tail(), vars: { i, swapped, comparisons, swaps }, note: "Pass " + (i + 1) + " starts: swapped = false. j goes up to " + (n - 2 - i) + ", because the last " + i + " value" + (i === 1 ? " is" : "s are") + " already final." });
+      for (let j = 0; j < n - 1 - i; j++) {
+        comparisons++;
+        const ptrs = { j, "j+1": j + 1 };
+        if (a[j] > a[j + 1]) {
+          const x = a[j], y = a[j + 1];
+          [a[j], a[j + 1]] = [a[j + 1], a[j]];
+          swaps++;
+          swapped = true;
+          frames.push({ line: 5, cells: a.slice(), hi: tail({ [j]: "compare", [j + 1]: "compare" }), ptrs, vars: { i, j, swapped, comparisons, swaps }, note: x + " > " + y + ": wrong order, swap them." });
+        } else {
+          frames.push({ line: 4, cells: a.slice(), hi: tail({ [j]: "compare", [j + 1]: "compare" }), ptrs, vars: { i, j, swapped, comparisons, swaps }, note: a[j] + " ≤ " + a[j + 1] + ": already in order, no swap." });
+        }
+      }
+      sortedFrom = n - 1 - i;
+      if (!swapped) {
+        sortedFrom = 0;
+        frames.push({ line: 9, cells: a.slice(), hi: tail(), vars: { i, swapped, comparisons, swaps }, note: "Pass " + (i + 1) + " made no swap at all, so every neighbour pair is in order: the array is sorted. Break!" });
+        break;
+      }
+      frames.push({ line: 9, cells: a.slice(), hi: tail(), vars: { i, swapped, comparisons, swaps }, note: "Pass " + (i + 1) + " done: " + a[n - 1 - i] + " is in its final place. swapped is true, so keep going." });
+    }
+    frames.push({ line: 10, cells: a.slice(), hi: Object.fromEntries(a.map((_, k) => [k, "found"])), vars: { passes: i + 1, comparisons, swaps }, note: "Sorted in " + (i + 1) + " passes, " + comparisons + " comparisons and " + swaps + " swaps (the array had " + swaps + " inversions)." });
+    Lesson.trace("#bubble", {
+      title: "bubble sort [4, 1, 3, 2, 6, 5]",
+      code: [
+        "for (let i = 0; i < n - 1; i++) {",
+        "  let swapped = false;",
+        "  for (let j = 0; j < n - 1 - i; j++) {",
+        "    if (a[j] > a[j + 1]) {",
+        "      [a[j], a[j + 1]] = [a[j + 1], a[j]];",
+        "      swapped = true;",
+        "    }",
+        "  }",
+        "  if (!swapped) break;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: selection sort on [7, 4, 9, 2, 5, 3] with i / j / min pointers.
+  (function () {
+    const a = [7, 4, 9, 2, 5, 3];
+    const n = a.length;
+    const frames = [];
+    let comparisons = 0, swaps = 0;
+    const fixed = (upto, extra) => {
+      const hi = {};
+      for (let k = 0; k < upto; k++) hi[k] = "done";
+      return Object.assign(hi, extra || {});
+    };
+    frames.push({ line: 1, cells: a.slice(), hi: {}, vars: { comparisons, swaps }, note: "Sort [" + a.join(", ") + "]. Fill the positions from the left, one per step." });
+    for (let i = 0; i < n - 1; i++) {
+      let min = i;
+      frames.push({ line: 2, cells: a.slice(), hi: fixed(i, { [min]: "active" }), ptrs: { i, min }, vars: { i, min, "a[min]": a[min], comparisons, swaps }, note: "Step " + i + ": which value belongs at index " + i + "? Start by guessing a[" + i + "] = " + a[i] + " is the smallest of the rest." });
+      for (let j = i + 1; j < n; j++) {
+        comparisons++;
+        if (a[j] < a[min]) {
+          const old = a[min];
+          min = j;
+          frames.push({ line: 4, cells: a.slice(), hi: fixed(i, { [min]: "active" }), ptrs: { i, j, min }, vars: { i, j, min, "a[min]": a[min], comparisons, swaps }, note: a[j] + " < " + old + ": a new smallest. min = " + j + "." });
+        } else {
+          frames.push({ line: 4, cells: a.slice(), hi: fixed(i, { [min]: "active", [j]: "compare" }), ptrs: { i, j, min }, vars: { i, j, min, "a[min]": a[min], comparisons, swaps }, note: a[j] + " is not smaller than " + a[min] + ". min stays " + min + "." });
+        }
+      }
+      if (min !== i) {
+        const x = a[i], y = a[min];
+        [a[i], a[min]] = [a[min], a[i]];
+        swaps++;
+        frames.push({ line: 6, cells: a.slice(), hi: fixed(i + 1, { [min]: "compare" }), ptrs: { i, min }, vars: { i, min, comparisons, swaps }, note: "Scan done. Swap the smallest (" + y + ") into index " + i + "; " + x + " goes to index " + min + ". Index " + i + " is final." });
+      } else {
+        frames.push({ line: 6, cells: a.slice(), hi: fixed(i + 1), ptrs: { i, min }, vars: { i, min, comparisons, swaps }, note: "Scan done. The smallest is already at index " + i + ", so the swap does nothing. Index " + i + " is final." });
+      }
+    }
+    frames.push({ line: 7, cells: a.slice(), hi: Object.fromEntries(a.map((_, k) => [k, "found"])), vars: { comparisons, swaps }, note: "The last value is final by itself. Sorted with " + comparisons + " comparisons and only " + swaps + " swaps." });
+    Lesson.trace("#selection", {
+      title: "selection sort [7, 4, 9, 2, 5, 3]",
+      code: [
+        "for (let i = 0; i < n - 1; i++) {",
+        "  let min = i;",
+        "  for (let j = i + 1; j < n; j++) {",
+        "    if (a[j] < a[min]) min = j;",
+        "  }",
+        "  [a[i], a[min]] = [a[min], a[i]];",
+        "}",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

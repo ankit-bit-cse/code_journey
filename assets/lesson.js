@@ -1,4 +1,4 @@
-// Shared behaviour for every js-for-dsa page:
+// Shared behaviour for every lesson page (js-for-dsa/ and dsa/):
 // - gives each day its own colour, numbers the section headings, colours the code
 // - fades cards in as you scroll, with a reading progress bar
 // - Lesson.trace(selector, config): a step-by-step player that animates code running
@@ -34,7 +34,9 @@
   const BURST_COLORS = ["var(--accent)", "var(--accent-2)", "var(--good)", "var(--warn)", "hsl(340 85% 60%)"];
   const dayMatch = location.pathname.match(/day-(\d+)/);
   const dayNum = dayMatch ? Number(dayMatch[1]) : 0;
-  const [h1, h2] = dayNum ? HUES[(dayNum - 1) % HUES.length] : [250, 300];
+  // The dsa/ track and days after 10 shift the colours a little, so no two lessons look the same.
+  const shift = (/\/dsa\//.test(location.pathname) ? 18 : 0) + Math.floor((dayNum - 1) / HUES.length) * 9;
+  const [h1, h2] = dayNum ? HUES[(dayNum - 1) % HUES.length].map((h) => h + shift) : [250, 300];
   document.documentElement.style.setProperty("--h", h1);
   document.documentElement.style.setProperty("--h2", h2);
 
@@ -219,6 +221,7 @@
       }
 
       if (hasMap) {
+        mapWrap.hidden = !f.map;
         map.textContent = "";
         const entries = f.map instanceof Map ? [...f.map] : Object.entries(f.map || {});
         if (!entries.length) map.append(el("span", "chip", "(empty)"));

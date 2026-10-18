@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recursion on Arrays</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 4</p>
+  <h1>Recursion on arrays and strings</h1>
+  <p class="lede">Yesterday recursion worked on numbers. Today it walks along arrays and strings with an index, dives into arrays inside arrays, and builds whole lists of answers.</p>
+  <nav class="daynav"><a href="../day-03/concept.html">← Day 3</a><a href="../day-05/concept.html">Day 5 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Slicing hides a loop</h2>
+  <p>In JS for DSA you summed an array like this. It reads nicely:</p>
+<pre><code>function sum(arr) {
+  if (arr.length === 0) return 0;
+  return arr[0] + sum(arr.slice(1));   // the rest, as a NEW array
+}</code></pre>
+  <p>But <code>slice(1)</code> is not free. It copies every remaining element into a new array (Day 2: <code>slice</code> is O(k)). For 5 elements the calls copy 4, 3, 2, 1 and 0 values:</p>
+<pre><code>sum([4, 7, 1, 6, 2])   copies 4 values
+ sum([7, 1, 6, 2])     copies 3
+  sum([1, 6, 2])       copies 2
+   sum([6, 2])         copies 1
+    sum([2])           copies 0      total: n(n-1)/2  →  O(n²)</code></pre>
+  <p class="callout"><strong>Hidden cost.</strong> One line of code, but O(n) work inside each call, so O(n²) in total. And every copy is still alive while the calls below it run, so it eats O(n²) memory too.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Pass an index instead</h2>
+  <p>Keep the <b>one</b> array and tell each call where to start. "The rest of the array" is just <code>i + 1</code>:</p>
+<pre><code>function sumFrom(arr, i = 0) {
+  if (i === arr.length) return 0;        // base case: nothing left
+  return arr[i] + sumFrom(arr, i + 1);   // this element + the rest
+}
+sumFrom([4, 7, 1, 6]);   // 18 (i starts at 0 by default)</code></pre>
+  <ul>
+    <li><b>Base case:</b> the index has walked off the end, so the rest is empty.</li>
+    <li><b>Smaller problem:</b> the same array, one index later.</li>
+    <li><b>Trust:</b> assume <code>sumFrom(arr, i + 1)</code> already works, and only add <code>arr[i]</code>.</li>
+  </ul>
+  <p>Each call now does O(1) work, so the whole thing is <b>O(n) time</b>. The stack still holds one call per element: <b>O(n) space</b>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: the index walks, the stack grows</h2>
+  <p>The arrow <code>i</code> moves right as each call is made. The calls pile up on the stack, each waiting for the one above it. At the end the answers come back down, adding one element each.</p>
+  <div id="sumfrom"></div>
+  <p>Count the calls: 4 elements, 5 calls (the last one is the base case). One call per element plus one: O(n).</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Helper functions carry extra parameters</h2>
+  <p>Sometimes the question gives you <code>f(arr)</code>, but your recursion wants more: an index, a string built so far, an output array. Put a <b>helper</b> inside and let it carry them. Inner functions can see the outer variables (Day 3 of JS for DSA: scope).</p>
+<pre><code>function evensOf(arr) {
+  const out = [];               // one shared result
+  function helper(i) {
+    if (i === arr.length) return;          // base case
+    if (arr[i] % 2 === 0) out.push(arr[i]);
+    helper(i + 1);                         // the rest
+  }
+  helper(0);
+  return out;
+}
+evensOf([3, 8, 2, 5]);   // [8, 2]</code></pre>
+  <p>Strings work the same way: <code>s[i]</code> is one character and <code>i === s.length</code> means nothing is left.</p>
+  <p class="callout"><strong>Two classic bugs.</strong> Calling <code>helper(i)</code> instead of <code>helper(i + 1)</code> never gets smaller, so it crashes with <code>Maximum call stack size exceeded</code>. And in a function that returns a value, forgetting the <code>return</code> in <code>return f(arr, i + 1)</code> hands <code>undefined</code> back.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>function f(arr, i = 0) { if (i === arr.length) return 0; return 1 + f(arr, i + 1); }</code> → <code>f([5, 5, 5])</code></summary><div><p><code>3</code>. It adds 1 per element: it is a recursive <code>length</code>.</p></div></details>
+  <details class="predict"><summary>Same <code>f</code>, but called as <code>f([5, 5, 5], 2)</code></summary><div><p><code>1</code>. The default <code>i = 0</code> only applies when the argument is missing. Starting at 2, only one element is left.</p></div></details>
+  <details class="predict"><summary><code>function g(s, i = 0) { if (i === s.length) return ""; return g(s, i + 1) + s[i]; }</code> → <code>g("abc")</code></summary><div><p><code>"cba"</code>. Each call puts its own character <b>after</b> the answer for the rest, so the last character ends up first.</p></div></details>
+  <details class="predict"><summary><code>Array.isArray([])</code>, <code>Array.isArray("ab")</code>, <code>typeof []</code></summary><div><p><code>true</code>, <code>false</code>, <code>"object"</code>. <code>typeof</code> can't tell an array from an object, which is why we use <code>Array.isArray</code>.</p></div></details>
+  <details class="predict"><summary>How many results does take/skip give for <code>"abcd"</code>?</summary><div><p><code>16</code>. Two choices per character, 4 characters: 2 × 2 × 2 × 2 = 2⁴.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>6. Arrays inside arrays</h2>
+  <p><code>[[8, [6]], 3, [[5], 1]]</code> is a little <b>tree</b>: some items are numbers, some are arrays, which hold more items. You can't know how deep it goes, so no fixed number of loops can handle it. Recursion can:</p>
+<pre><code>for (const item of arr) {          // ACROSS one level: a loop
+  if (Array.isArray(item)) {
+    walk(item);                    // DOWN into a level: recursion
+  } else {
+    // a plain number: do something with it
+  }
+}</code></pre>
+  <p>Where is the base case? An array with only numbers in it makes no recursive calls, so the recursion stops there by itself.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Watch it run: unwrapping nested arrays</h2>
+  <p>Here we collect the <b>odd</b> numbers from a nested array into one shared <code>out</code> array. Watch the stack grow each time we step into an inner array, and shrink when that array is finished.</p>
+  <div id="unwrap"></div>
+  <p>Every number is visited once and every array is entered once. Drop the "is it odd?" check and you have <code>flatten</code> (Q6).</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Take or skip: recursion that builds every answer</h2>
+  <p>"Which subsets of <code>[1, 2, 4]</code> are there?" Look at the elements one at a time and make a choice: <b>take it</b> or <b>skip it</b>. Each call makes two calls, so it forms a tree with 2 × 2 × 2 = 8 leaves, one per subset.</p>
+<pre><code>                 i=0, sum 0
+          take 1 /        \ skip 1
+         i=1, 1             i=1, 0
+      take 2 / \ skip     take 2 / \ skip
+        ...     ...         ...     ...     (8 leaves)</code></pre>
+  <p>Below, the helper carries <code>i</code> (which element we decide next) and <code>sum</code> (the total of what we took). When every element is decided, the sum is one finished answer. "Take" is always tried first, so the answers come out in a fixed order.</p>
+  <div id="takeskip"></div>
+  <p class="callout"><strong>Grows fast.</strong> 2ⁿ answers means 20 elements already give over a million. Take/skip is the right tool when you really need every combination, and tomorrow you will see how to avoid repeating work when you don't.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where these shapes come back</h2>
+  <p><b>Index recursion</b> is how merge sort and quick sort work on one array (Days 8 and 9): they pass <code>lo</code> and <code>hi</code> instead of copying halves. <b>Nested arrays</b> are your first trees: "walk every child, recurse into it" is exactly the tree traversal of Phase 4. <b>Take or skip</b> is backtracking, the engine behind interview classics like <i>Subsets</i>, <i>Combination Sum</i> and <i>Generate Parentheses</i>. And the grid-paths question is the first problem of dynamic programming, which starts tomorrow with memoization.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 4</code> after each one.</p>
+  <p><a href="../day-05/concept.html">Next: Day 5 · recursion trees and memoization →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: sumFrom(arr, i) with the index pointer and the call stack.
+  (function () {
+    const arr = [4, 7, 1, 6];
+    const frames = [];
+    const stack = [];
+    let calls = 0;
+    const snap = (line, note, i, extraHi, vars) => {
+      const hi = {};
+      arr.forEach((_, k) => { if (i != null && k < i) hi[k] = "dim"; });
+      Object.assign(hi, extraHi || {});
+      frames.push({
+        line, note, cells: arr, hi,
+        ptrs: i == null ? {} : { i },
+        map: new Map(stack.map((s) => [s.label, s.state])),
+        mhi: stack.length ? stack[stack.length - 1].label : null,
+        vars: Object.assign({ calls }, vars || {}),
+      });
+    };
+    const done = {};
+    function sumFrom(i) {
+      calls++;
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "sumFrom(arr, " + i + ")", state: "running" });
+      if (i === arr.length) {
+        stack[stack.length - 1].state = "returns 0";
+        snap(2, "i = " + i + " is arr.length: nothing is left. Base case: return 0.", i, done, { i });
+        stack.pop();
+        return 0;
+      }
+      snap(3, "sumFrom(arr, " + i + ") starts. arr[" + i + "] is " + arr[i] + ", but first it needs the sum of everything after it.", i, Object.assign({}, done, { [i]: "active" }), { i });
+      const rest = sumFrom(i + 1);
+      stack[stack.length - 1].state = "running";
+      const out = arr[i] + rest;
+      done[i] = "done";
+      stack[stack.length - 1].state = "returns " + out;
+      snap(4, "Back in sumFrom(arr, " + i + "): the rest summed to " + rest + ". Return arr[" + i + "] + rest = " + arr[i] + " + " + rest + " = " + out + ".", i, done, { i, rest });
+      stack.pop();
+      return out;
+    }
+    stack.push({ label: "main", state: "running" });
+    snap(6, "Call sumFrom([4, 7, 1, 6]). No i is passed, so the default i = 0 is used.", null);
+    const total = sumFrom(0);
+    stack[0].state = "got " + total;
+    snap(6, "Done: " + total + ". " + calls + " calls, and not a single copy of the array was made.", null, { 0: "found", 1: "found", 2: "found", 3: "found" }, { total });
+    Lesson.trace("#sumfrom", {
+      title: "sumFrom([4, 7, 1, 6])",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function sumFrom(arr, i = 0) {",
+        "  if (i === arr.length) return 0;",
+        "  const rest = sumFrom(arr, i + 1);",
+        "  return arr[i] + rest;",
+        "}",
+        "sumFrom([4, 7, 1, 6]);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: walk a nested array and collect the odd numbers into one shared out array.
+  (function () {
+    const nested = [[8, [6]], 3, [[5], 1]];
+    const frames = [];
+    const stack = [];
+    const out = [];
+    let visits = 0;
+    const json = (a) => JSON.stringify(a).replace(/,/g, ", ");
+    const snap = (line, note, vars, newest) => {
+      const hi = {};
+      out.forEach((_, k) => { hi[k] = "done"; });
+      if (newest) hi[out.length - 1] = "found";
+      frames.push({
+        line, note, cells: out.slice(), hi,
+        map: new Map(stack.map((s) => [s.label, s.state])),
+        mhi: stack.length ? stack[stack.length - 1].label : null,
+        vars: Object.assign({ depth: stack.length - 1, visits }, vars || {}),
+      });
+    };
+    function walk(arr) {
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "walk(" + json(arr) + ")", state: "running" });
+      snap(7, "Enter walk(" + json(arr) + "). Depth " + (stack.length - 1) + ": loop across its " + arr.length + " items.");
+      for (const item of arr) {
+        visits++;
+        if (Array.isArray(item)) {
+          snap(8, json(item) + " is an array. Go DOWN into it with a recursive call.", { item: json(item) });
+          walk(item);
+          stack[stack.length - 1].state = "running";
+          snap(8, "Back from " + json(item) + ". Carry on across this level.", { item: json(item) });
+        } else if (item % 2 === 1) {
+          out.push(item);
+          snap(9, item + " is a number and it is odd: push it into out.", { item }, true);
+        } else {
+          snap(9, item + " is a number but it is even: skip it.", { item });
+        }
+      }
+      stack[stack.length - 1].state = "finished";
+      snap(11, "No items left in " + json(arr) + ". This call is finished and leaves the stack.");
+      stack.pop();
+    }
+    stack.push({ label: "collectOdds", state: "running" });
+    snap(3, "Start with an empty out. The whole nested array goes to walk.");
+    walk(nested);
+    stack[0].state = "returns out";
+    snap(4, "Done. out = [" + out.join(", ") + "], in left-to-right order, however deep each number was.");
+    Lesson.trace("#unwrap", {
+      title: "collect the odd numbers of [[8, [6]], 3, [[5], 1]]",
+      stacked: true,
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function collectOdds(nested) {",
+        "  const out = [];",
+        "  walk(nested, out);",
+        "  return out;",
+        "}",
+        "function walk(arr, out) {",
+        "  for (const item of arr) {",
+        "    if (Array.isArray(item)) walk(item, out);",
+        "    else if (item % 2 === 1) out.push(item);",
+        "  }",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: take / skip to list every subset sum of [1, 2, 4].
+  (function () {
+    const nums = [1, 2, 4];
+    const frames = [];
+    const stack = [];
+    const out = [];
+    let calls = 0;
+    const snap = (line, note, vars, newest) => {
+      const hi = {};
+      out.forEach((_, k) => { hi[k] = "done"; });
+      if (newest) hi[out.length - 1] = "found";
+      frames.push({
+        line, note, cells: out.slice(), hi,
+        map: new Map(stack.map((s) => [s.label, s.state])),
+        mhi: stack.length ? stack[stack.length - 1].label : null,
+        vars: Object.assign({ calls }, vars || {}),
+      });
+    };
+    function helper(i, sum) {
+      calls++;
+      if (stack.length) stack[stack.length - 1].state = stack[stack.length - 1].next || "waiting";
+      stack.push({ label: "helper(" + i + ", " + sum + ")", state: "running" });
+      if (i === nums.length) {
+        out.push(sum);
+        stack[stack.length - 1].state = "saves " + sum;
+        snap(4, "i = " + i + ": every element is decided. Save sum = " + sum + " as one answer.", { i, sum }, true);
+        stack.pop();
+        return;
+      }
+      stack[stack.length - 1].next = "took " + nums[i] + ", waiting";
+      snap(5, "Decide nums[" + i + "] = " + nums[i] + ". First TAKE it: call helper(" + (i + 1) + ", " + (sum + nums[i]) + ").", { i, sum });
+      helper(i + 1, sum + nums[i]);
+      stack[stack.length - 1].next = "skipped " + nums[i] + ", waiting";
+      stack[stack.length - 1].state = "running";
+      snap(6, "Back in helper(" + i + ", " + sum + "). Now SKIP nums[" + i + "]: call helper(" + (i + 1) + ", " + sum + ").", { i, sum });
+      helper(i + 1, sum);
+      stack.pop();
+    }
+    stack.push({ label: "subsetSums", state: "running" });
+    snap(8, "Start with i = 0 (nothing decided) and sum = 0 (nothing taken).");
+    helper(0, 0);
+    stack[0].state = "returns out";
+    snap(9, "All " + out.length + " subsets found with " + calls + " calls. Take-before-skip puts the biggest sum (take all) first and 0 (skip all) last.");
+    Lesson.trace("#takeskip", {
+      title: "every subset sum of [1, 2, 4]",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function subsetSums(nums) {",
+        "  const out = [];",
+        "  function helper(i, sum) {",
+        "    if (i === nums.length) { out.push(sum); return; }",
+        "    helper(i + 1, sum + nums[i]);   // take",
+        "    helper(i + 1, sum);             // skip",
+        "  }",
+        "  helper(0, 0);",
+        "  return out;",
+        "}",
+      ],
+      stacked: true,
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

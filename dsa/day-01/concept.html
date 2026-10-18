@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counting Steps</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 1</p>
+  <h1>Time complexity: counting steps</h1>
+  <p class="lede">How fast is a piece of code? Not in seconds, which change with every laptop, but in <b>steps</b>: how many times its lines run as the input grows. Count them, keep the biggest term, and you have its Big-O.</p>
+  <nav class="daynav"><a href="../index.html">← All days</a><a href="../day-02/concept.html">Day 2 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Count how often each line runs</h2>
+  <p>In JS for DSA Day 2 you met O(n) and O(n²) as names. Today we go one level deeper: for each line, write down <b>exactly</b> how many times it runs for an input of size <code>n</code>.</p>
+<pre><code>function sumAndMax(arr) {        // n = arr.length
+  let sum = 0;                   // 1 time
+  let max = -Infinity;           // 1 time
+  for (const x of arr) {
+    sum += x;                    // n times
+    if (x &gt; max) max = x;        // n times
+  }
+  return [sum, max];             // 1 time
+}</code></pre>
+  <p>Total: <code>2n + 3</code> steps. For n = 10 that is 23, for n = 1,000,000 it is 2,000,003. The <b>shape</b> is what matters: double n and the work doubles. That is <b>O(n)</b>, linear time.</p>
+  <p class="callout"><strong>A "step" is any simple operation</strong>: one comparison, one addition, one assignment, one array read. We don't care whether a line is 1 step or 3: that only changes the constant in front, and constants get dropped (section 3).</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Counting a loop whose length changes</h2>
+  <p>When the inner loop depends on the outer one, add up the rounds one by one:</p>
+<pre><code>for (let i = 0; i &lt; n; i++)
+  for (let j = i; j &lt; n; j++)   // j starts at i
+    steps++;</code></pre>
+  <p>For i = 0 the inner loop runs n times, for i = 1 it runs n − 1 times, ..., for the last i it runs once. So the total is <code>n + (n − 1) + ... + 2 + 1</code>.</p>
+  <p><b>The Gauss trick.</b> Write the sum forwards and backwards under each other:</p>
+<pre><code>  1   +   2   + ... + (n-1) +   n
+  n   + (n-1) + ... +   2   +   1
+-------------------------------------
+(n+1) + (n+1) + ... + (n+1) + (n+1)    // n columns</code></pre>
+  <p>Each column adds to <code>n + 1</code> and there are <code>n</code> columns, so twice the sum is <code>n(n + 1)</code>, and the sum is <code>n(n + 1) / 2</code>. For n = 5: 5 · 6 / 2 = 15. You will use this trick in Q2 and Q6.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Drop the constants and the smaller terms</h2>
+  <p>Big-O describes how the step count <b>grows</b> for big n. Two rules turn any formula into its Big-O:</p>
+  <ol>
+    <li><b>Keep only the biggest term.</b> In <code>n² + 100n + 7</code>, for n = 1,000,000 the n² part is 10¹² and the 100n part is only 10⁸. The small terms stop mattering.</li>
+    <li><b>Drop the constant in front.</b> <code>2n + 3</code> and <code>50n</code> are both O(n): doubling n doubles both.</li>
+  </ol>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Exact count</th><th>Biggest term</th><th>Big-O</th></tr>
+    <tr><td><code>2n + 3</code></td><td><code>2n</code></td><td>O(n)</td></tr>
+    <tr><td><code>n(n + 1) / 2 = n²/2 + n/2</code></td><td><code>n²/2</code></td><td>O(n²)</td></tr>
+    <tr><td><code>3n² + 1000n + 5</code></td><td><code>3n²</code></td><td>O(n²)</td></tr>
+    <tr><td><code>500</code></td><td><code>500</code></td><td>O(1)</td></tr>
+    <tr><td><code>n log₂ n + 4n</code></td><td><code>n log₂ n</code></td><td>O(n log n)</td></tr>
+  </table>
+  </div>
+  <p class="callout"><strong>Two inputs, two letters.</strong> A loop over <code>a</code> followed by a loop over <code>b</code> is O(n + m), not O(n). A loop over <code>a</code> with a loop over <code>b</code> inside it is O(n · m). Don't squash different sizes into one n.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Watch it run: a step counter in nested loops</h2>
+  <p>The section 2 loop for n = 5. Each grid cell is one pair (i, j): row i, column j. A cell gets a number when <code>steps++</code> runs for that pair. Watch the triangle fill: that triangle is why the count is about half of n².</p>
+  <div id="nested"></div>
+  <p>15 = 5 · 6 / 2, just as Gauss said. The full square would be 25 = n²; the triangle is a bit more than half of it. Half of n² is still O(n²).</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. The shapes you will meet again and again</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Code shape</th><th>Steps</th><th>Big-O</th></tr>
+    <tr><td>no loop, or a loop to a fixed number like 26</td><td>a constant</td><td>O(1)</td></tr>
+    <tr><td><code>for (m = n; m &gt; 1; m = Math.floor(m / 2))</code></td><td>about log₂ n</td><td>O(log n)</td></tr>
+    <tr><td><code>for (i = 1; i * i &lt;= n; i++)</code></td><td>about √n</td><td>O(√n)</td></tr>
+    <tr><td>one loop to n</td><td>n</td><td>O(n)</td></tr>
+    <tr><td>loop to n, <b>then</b> another loop to n</td><td>n + n (they <b>add</b>)</td><td>O(n)</td></tr>
+    <tr><td>loop to n with a halving loop <b>inside</b></td><td>n · log₂ n (they <b>multiply</b>)</td><td>O(n log n)</td></tr>
+    <tr><td>loop to n with a loop to n inside</td><td>n · n</td><td>O(n²)</td></tr>
+    <tr><td>a function that calls itself twice on n − 1</td><td>1 + 2 + 4 + ... + 2ⁿ</td><td>O(2ⁿ)</td></tr>
+  </table>
+  </div>
+  <p><b>Why is halving log n?</b> log₂ n answers "how many times can I halve n before I reach 1?". 16 → 8 → 4 → 2 → 1 is 4 halvings, and log₂ 16 = 4. A loop that <b>multiplies</b> by 2 (<code>i *= 2</code>) up to n is the same count, read the other way.</p>
+  <p class="callout"><strong>Subtracting is not halving.</strong> <code>while (n &gt; 0) n -= 2;</code> runs n / 2 times: that is still O(n). Only dividing (or multiplying) by a constant each step gives log n.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: linear vs halving, side by side</h2>
+  <p>Both loops start on n = 16 and take one step per tick. The <code>i</code> pointer walks one box at a time; the <code>m</code> pointer jumps to half of what is left. Watch who finishes first.</p>
+  <div id="race"></div>
+  <p>For n = 16 the halving loop needs 4 steps against 16. For n = 1,000,000 it needs only 19 against a million: that gap is the whole point of binary search (Days 10–12).</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. How fast do they grow?</h2>
+  <p>Roughly how many steps each Big-O means:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Big-O</th><th>n = 10</th><th>n = 100</th><th>n = 10⁶</th></tr>
+    <tr><td>O(1)</td><td>1</td><td>1</td><td>1</td></tr>
+    <tr><td>O(log n)</td><td>3</td><td>7</td><td>20</td></tr>
+    <tr><td>O(√n)</td><td>3</td><td>10</td><td>1,000</td></tr>
+    <tr><td>O(n)</td><td>10</td><td>100</td><td>10⁶</td></tr>
+    <tr><td>O(n log n)</td><td>33</td><td>664</td><td>2 × 10⁷</td></tr>
+    <tr><td>O(n²)</td><td>100</td><td>10,000</td><td>10¹²</td></tr>
+    <tr><td>O(2ⁿ)</td><td>1,024</td><td>about 10³⁰</td><td>a number with 301,030 digits</td></tr>
+  </table>
+  </div>
+  <p>A computer does roughly <b>10⁸ simple steps per second</b>. So 10¹² steps is about 3 hours, and 2¹⁰⁰ steps would not finish before the sun burns out. Each row is a different world: no faster laptop moves you from O(n²) to O(n), only a better idea does.</p>
+  <p class="callout"><strong>Big-O is about big n.</strong> For n = 10, an O(n²) loop (100 steps) can beat an O(n) loop with a heavy body. Big-O tells you who wins as n grows, not who wins at every n.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Same answer, far fewer steps</h2>
+  <p>Most of DSA is this: you have a correct slow version, and you find an idea that skips work. Three of today's questions are exactly that:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Task</th><th>Slow idea</th><th>Fast idea</th><th>Steps for n = 10⁶</th></tr>
+    <tr><td>1 + 2 + ... + n</td><td>loop, O(n)</td><td>Gauss formula, O(1)</td><td>10⁶ → 1</td></tr>
+    <tr><td>count the divisors of n</td><td>try 1..n, O(n)</td><td>try 1..√n, pairs, O(√n)</td><td>10⁶ → 1,000</td></tr>
+    <tr><td>pair with a sum in a sorted array</td><td>every pair, O(n²)</td><td>two pointers, O(n)</td><td>5 × 10¹¹ → 10⁶</td></tr>
+  </table>
+  </div>
+<pre><code>// Divisors come in pairs: i and n / i.
+// 36: (1, 36) (2, 18) (3, 12) (4, 9) (6, 6)
+// One number of each pair is &lt;= √36 = 6, so stop at 6.</code></pre>
+  <p class="callout"><strong>Perfect squares.</strong> The pair (6, 6) is ONE divisor, not two. That is the classic off-by-one in Q7.</p>
+</section>
+
+<section class="card reveal">
+  <h2>9. Predict the output</h2>
+  <p>Say the Big-O out loud first, then reveal.</p>
+  <details class="predict"><summary><code>for (i = 0; i &lt; n; i++) for (j = 0; j &lt; 100; j++) steps++;</code></summary><div><p><b>O(n)</b>. The inner loop always runs 100 times, a constant. 100n drops to n.</p></div></details>
+  <details class="predict"><summary><code>for (i = 1; i &lt; n; i *= 2) steps++;</code></summary><div><p><b>O(log n)</b>. i goes 1, 2, 4, 8, ... and reaches n after about log₂ n doublings.</p></div></details>
+  <details class="predict"><summary><code>for (x of a) steps++;  for (y of b) steps++;</code> (a has n items, b has m)</summary><div><p><b>O(n + m)</b>. Two loops one after the other add, and they have different sizes.</p></div></details>
+  <details class="predict"><summary><code>for (i = 0; i &lt; n; i++) for (j = 1; j &lt; n; j *= 2) steps++;</code></summary><div><p><b>O(n log n)</b>. n outer rounds, each with a log n inner loop: multiply.</p></div></details>
+  <details class="predict"><summary><code>while (n &gt; 0) n = n - 3;</code></summary><div><p><b>O(n)</b>. About n / 3 steps. Subtracting a constant is linear; only dividing gives log n.</p></div></details>
+  <details class="predict"><summary>Exact count: <code>for (i = 0; i &lt; 4; i++) for (j = 0; j &lt; i; j++) steps++;</code></summary><div><p><b>6</b>: 0 + 1 + 2 + 3. Turning that into a formula for any n is Q2.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>reading the constraints in interviews</h2>
+  <p>Problem statements give the input size, like <code>1 ≤ n ≤ 10⁵</code>. With about 10⁸ steps per second, that size tells you which Big-O the intended solution has, before you write a line:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>n up to</th><th>You can afford</th><th>Typical idea</th></tr>
+    <tr><td>20</td><td>O(2ⁿ)</td><td>try every subset (recursion, Day 5)</td></tr>
+    <tr><td>2,000–5,000</td><td>O(n²)</td><td>every pair, simple sorts (Days 6–7)</td></tr>
+    <tr><td>10⁵–10⁶</td><td>O(n log n) or O(n)</td><td>sorting (Days 8–9), hash maps, two pointers</td></tr>
+    <tr><td>10⁹ and more</td><td>O(log n) or O(1)</td><td>binary search (Days 10–12), a formula</td></tr>
+  </table>
+  </div>
+  <p>Every later topic in this track comes with its Big-O, and the interviewer will always ask "what is the time complexity?". Tomorrow: the other half, <b>space</b>, and the hidden cost of JavaScript's built-in methods.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 1</code> after each one.</p>
+  <p><a href="../day-02/concept.html">Next: Day 2 · space complexity and the cost of built-ins →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: the step counter filling a triangle of (i, j) pairs.
+  (function () {
+    const n = 5;
+    const grid = Array.from({ length: n }, () => new Array(n).fill("·"));
+    const ghi = {};
+    const frames = [];
+    const g = () => grid.map((r) => r.slice());
+    let steps = 0;
+    frames.push({ line: 1, grid: g(), ghi: {}, vars: { n, steps }, note: "n = 5, steps = 0. Row i, column j: each cell is one (i, j) pair the loops could visit." });
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < i; j++) ghi[i + "," + j] = "dim";
+      frames.push({ line: 2, grid: g(), ghi: Object.assign({}, ghi), vars: { n, i, steps }, note: "Outer round i = " + i + ". j starts at " + i + ", so " + (i ? "the " + i + " grey cell" + (i > 1 ? "s" : "") + " on the left of row " + i + " never run" : "the whole row runs") + ": " + (n - i) + " inner step" + (n - i > 1 ? "s" : "") + " this round." });
+      for (let j = i; j < n; j++) {
+        steps++;
+        grid[i][j] = steps;
+        const h = Object.assign({}, ghi, { [i + "," + j]: "active" });
+        frames.push({ line: 4, grid: g(), ghi: h, vars: { n, i, j, steps }, note: "(" + i + ", " + j + "): steps++ runs, steps = " + steps + "." + (j === n - 1 ? " j reaches n, the inner loop ends." : "") });
+        ghi[i + "," + j] = "done";
+      }
+    }
+    const fin = {};
+    for (let i = 0; i < n; i++) for (let j = i; j < n; j++) fin[i + "," + j] = "found";
+    frames.push({ line: 6, grid: g(), ghi: Object.assign({}, ghi, fin), vars: { n, steps }, note: "Done: steps = " + steps + " = 5 + 4 + 3 + 2 + 1 = n(n + 1) / 2. A triangle of the n × n square: O(n²)." });
+    Lesson.trace("#nested", {
+      title: "nested loops, n = 5",
+      code: [
+        "let steps = 0;",
+        "for (let i = 0; i < n; i++) {",
+        "  for (let j = i; j < n; j++) {",
+        "    steps++;",
+        "  }",
+        "}",
+        "// steps === n * (n + 1) / 2",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: a linear loop and a halving loop racing on n = 16.
+  (function () {
+    const n = 16;
+    const cells = Array.from({ length: n }, (_, k) => k + 1);
+    const frames = [];
+    let i = 1, m = n, linear = 0, halving = 0;
+    const walked = {}, jumped = { [m - 1]: "found" };
+    const hi = () => Object.assign({}, walked, jumped);
+    frames.push({ line: 1, cells, hi: hi(), ptrs: { i: i - 1, m: m - 1 }, vars: { n, i, m, linear, halving }, note: "Both start: i = 1 walks up one by one, m = 16 will halve. Each pointer sits on the box with its value." });
+    let tick = 0;
+    while (i <= n) {
+      tick++;
+      linear++;
+      walked[i - 1] = "done";
+      let msg = "Tick " + tick + ": linear counts i = " + i + " (linear = " + linear + ").";
+      let line = 2;
+      if (m > 1) {
+        m = Math.floor(m / 2);
+        halving++;
+        jumped[m - 1] = "found";
+        msg += " Halving jumps to m = " + m + " (halving = " + halving + ")." + (m === 1 ? " m is 1: the halving loop is finished!" : "");
+        line = 4;
+      } else {
+        msg += " Halving finished long ago and waits.";
+      }
+      i++;
+      const p = { m: m - 1 };
+      if (i <= n) p.i = i - 1;
+      frames.push({ line, cells, hi: hi(), ptrs: p, vars: { n, i, m, linear, halving }, note: msg });
+    }
+    frames.push({ line: 5, cells, hi: hi(), ptrs: { m: m - 1 }, vars: { n, linear, halving }, note: "Linear needed 16 steps, halving only 4 = log₂ 16. For n = 1,000,000: 1,000,000 vs 19." });
+    Lesson.trace("#race", {
+      stacked: true,
+      title: "linear vs halving, n = 16",
+      code: [
+        "// linear: visit every value, O(n)",
+        "for (let i = 1; i <= n; i++) linear++;",
+        "// halving: jump to half of what is left, O(log n)",
+        "for (let m = n; m > 1; m = Math.floor(m / 2)) halving++;",
+        "// linear === 16, halving === 4",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

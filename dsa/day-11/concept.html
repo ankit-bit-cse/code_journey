@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tricky Binary Search</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 11</p>
+  <h1>Binary search on tricky arrays</h1>
+  <p class="lede">Binary search doesn't need a perfectly sorted array. It needs one thing: a look at <code>mid</code> that lets you <b>throw half away for sure</b>. Today: rotated arrays, peaks, matrices and pairs, all in O(log n).</p>
+  <nav class="daynav"><a href="../day-10/concept.html">← Day 10</a><a href="../day-12/concept.html">Day 12 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. The real rule of binary search</h2>
+  <p>Yesterday every search was on a sorted array. But look at what the loop really does each step: it looks at <code>mid</code>, answers one question, and keeps the half where the answer must be. Sorting is just one way to make that question answerable.</p>
+  <p>So the question to ask on any new problem is: <b>"If I look at mid (and maybe its neighbour), can I tell which half the answer is in?"</b> If yes, it's a binary search, sorted or not.</p>
+<pre><code>// versions 1..8:  good good good good good bad bad bad
+//                                         ^ first bad
+// No array at all. isBad(v) answers "is v bad?", and the answers
+// go no, no, ..., yes, yes. The first "yes" is a lower bound (Day 10).</code></pre>
+  <p class="callout"><strong>A function can be the "array".</strong> When a question hands you <code>isBad(v)</code>, call it with <code>mid</code> exactly like you'd read <code>arr[mid]</code>. Each call might be slow (think: building and testing a whole program version), so the number of calls is what you count.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Rotated sorted arrays</h2>
+  <p>Take a sorted array and move some items from the end to the front. That's a <b>rotation</b>:</p>
+<pre><code>[2, 5, 8, 11, 15, 20, 24]      // sorted
+[15, 20, 24, 2, 5, 8, 11]      // rotated 3 times to the right
+//            ^ the "drop": the only place where a number is
+//              bigger than the next one</code></pre>
+  <p>It's two sorted runs glued together. Now cut it at any <code>mid</code>. The drop is on one side only, so <b>at least one half is fully sorted</b>. How do you tell which?</p>
+<pre><code>if (arr[lo] &lt;= arr[mid]) {
+  // no drop between lo and mid: the LEFT half [lo..mid] is sorted
+} else {
+  // the drop is between lo and mid: the RIGHT half [mid..hi] is sorted
+}</code></pre>
+  <p>And in a sorted half, "is x in here?" is just a check against its two ends: <code>arr[lo] &lt;= x &amp;&amp; x &lt; arr[mid]</code>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: searching a rotated array</h2>
+  <p>Find 15. Every step: look at mid, decide <b>which half is sorted</b> (green), check if 15 fits between that half's ends, then keep the half where it must be. Grey is thrown away.</p>
+  <div id="rotated"></div>
+  <p>Four looks at a 10-item array. Notice the decision is always made on the <b>sorted</b> half, because that's the only half where "is x between the ends?" gives a reliable answer.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. The minimum of a rotated array</h2>
+  <p>The minimum sits right after the drop. Compare <code>arr[mid]</code> with the last item of the range, <code>arr[hi]</code>:</p>
+<pre><code>function findMinIndex(arr) {
+  let lo = 0, hi = arr.length - 1;
+  while (lo &lt; hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (arr[mid] &gt; arr[hi]) lo = mid + 1;  // the drop is right of mid
+    else hi = mid;                         // mid..hi sorted: min is mid or left
+  }
+  return lo;
+}
+findMinIndex([15, 20, 24, 2, 5, 8, 11]);   // 3</code></pre>
+  <p>The minimum started at index 0 and moved one place right per rotation, so <b>its index is how many times the array was rotated</b>.</p>
+  <p class="callout"><strong>Why <code>arr[hi]</code> and not <code>arr[lo]</code>?</strong> If the array is not rotated at all, <code>arr[mid] &gt; arr[lo]</code> is true everywhere, and comparing with <code>arr[lo]</code> would walk you right, away from the minimum at index 0. Comparing with <code>arr[hi]</code> handles both cases.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: peak finding walks uphill</h2>
+  <p>A <b>peak</b> is an item bigger than both neighbours (outside the array counts as <code>-Infinity</code>). Compare <code>arr[mid]</code> with <code>arr[mid + 1]</code>: if the next one is higher, you're on an uphill slope, and the slope has to stop somewhere to the right, so a peak is there. This array has three peaks; watch which one the search finds.</p>
+  <div id="peak"></div>
+  <p>It found the peak 6, not the biggest value 12. Binary search finds <b>a</b> peak, not the highest one. Finding the maximum needs a look at every item: O(n).</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: a sorted matrix is a flat array</h2>
+  <p>If each row is sorted and each row starts after the row above ends, reading row by row gives one sorted list. Number the cells 0, 1, 2, ... in reading order. Cell number <code>k</code> is at:</p>
+<pre><code>const row = Math.floor(k / cols);   // how many full rows come before it
+const col = k % cols;               // how far into its row</code></pre>
+  <p>Now it's yesterday's classic search over <code>k</code> from 0 to <code>rows * cols - 1</code>. Finding 28:</p>
+  <div id="matrix"></div>
+</section>
+
+<section class="card reveal">
+  <h2>7. When you don't know the size</h2>
+  <p>Sometimes there is no <code>length</code>: a huge sorted stream, or a <code>get(i)</code> that returns <code>Infinity</code> past the end. Binary search needs a <code>hi</code>, so find one by <b>doubling</b>:</p>
+<pre><code>let hi = 1;
+while (get(hi) &lt; x) hi = hi * 2;     // 1, 2, 4, 8, 16, ...
+let lo = Math.floor(hi / 2);
+// now x (if it's there) is inside [lo, hi]: binary search as usual</code></pre>
+  <p>If x is at index n, the doubling takes about log₂ n steps and the search another log₂ n, so it's still O(log n). This trick is called <b>exponential search</b>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Pairs in a sorted array</h2>
+  <p>In <code>[1, 1, 3, 3, 4, 7, 7]</code> every number is a pair except 4. Before the single one, pairs start at <b>even</b> indices (0, 2). After it, they start at <b>odd</b> indices (5). So looking at an even <code>mid</code> and its right neighbour tells you which side the single one is on. A pattern in the <i>positions</i>, not the values, is enough for binary search.</p>
+</section>
+
+<section class="card reveal">
+  <h2>9. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>[6, 7, 1, 2, 3, 4, 5]</code>, lo = 0, hi = 6: which half is sorted?</summary><div><p>mid = 3, <code>arr[0] = 6</code> and <code>arr[3] = 2</code>. 6 &gt; 2, so the drop is in the left half, and the <b>right</b> half <code>[2, 3, 4, 5]</code> is sorted.</p></div></details>
+  <details class="predict"><summary>How many times was <code>[6, 7, 1, 2, 3, 4, 5]</code> rotated?</summary><div><p><code>2</code>. The minimum 1 is at index 2. (Moving the last item to the front twice: <code>[1..7]</code> → <code>[7, 1, ..., 6]</code> → <code>[6, 7, 1, ..., 5]</code>.)</p></div></details>
+  <details class="predict"><summary>Peak search on <code>[3, 4, 5, 6]</code>: what index?</summary><div><p><code>3</code>. It's uphill all the way, so the last item is a peak (its right neighbour counts as <code>-Infinity</code>).</p></div></details>
+  <details class="predict"><summary>In a 4 × 5 matrix, where is flat index 13?</summary><div><p>Row <code>Math.floor(13 / 5) = 2</code>, column <code>13 % 5 = 3</code>. Note: divide by the number of <b>columns</b>, not rows.</p></div></details>
+  <details class="predict"><summary>The plain binary search from Day 10, looking for 5 in <code>[4, 5, 1, 2, 3]</code></summary><div><p><code>-1</code>, even though 5 is at index 1! mid = 2 holds 1 &lt; 5, so it throws away the left half (and the 5 with it), then checks 2 and 3 and gives up. Rotated arrays need the "which half is sorted" check.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where tricky searches show up</h2>
+  <p>"Search in rotated sorted array", "find minimum in rotated sorted array", "find peak element", "search a 2D matrix", "single element in a sorted array" and "first bad version" are all classic interview questions, and you've now seen every one. Peak finding comes back with <b>mountain arrays</b> and 2D peaks; the "a function is the array" idea from <code>isBad</code> is exactly what tomorrow is about: binary search on the <b>answer</b>.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 11</code> after each one.</p>
+  <p><a href="../day-12/concept.html">Day 12 →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: search for 15 in a rotated array, deciding which half is sorted every step.
+  (function () {
+    const arr = [20, 24, 29, 33, 41, 2, 5, 8, 11, 15];
+    const x = 15, n = arr.length;
+    const frames = [];
+    let lo = 0, hi = n - 1, steps = 0;
+    const shade = (extra) => {
+      const h = {};
+      for (let i = 0; i < n; i++) if (i < lo || i > hi) h[i] = "dim";
+      return Object.assign(h, extra || {});
+    };
+    const range = (a, b, state) => { const h = {}; for (let i = a; i <= b; i++) h[i] = state; return h; };
+    frames.push({ line: 1, cells: arr, hi: shade(), ptrs: { lo, hi }, vars: { x, lo, hi, steps }, note: "A sorted array rotated 5 times: the drop is between 41 and 2. We look for " + x + "." });
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      steps++;
+      frames.push({ line: 3, cells: arr, hi: shade({ [mid]: "compare" }), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, steps }, note: "mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + ", arr[mid] = " + arr[mid] + "." });
+      if (arr[mid] === x) {
+        frames.push({ line: 4, cells: arr, hi: shade({ [mid]: "found" }), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, steps }, note: "arr[" + mid + "] is " + x + ". Found at index " + mid + " in " + steps + " steps." });
+        break;
+      }
+      if (arr[lo] <= arr[mid]) {
+        frames.push({ line: 5, cells: arr, hi: shade(Object.assign(range(lo, mid, "done"), { [mid]: "compare" })), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, steps }, note: "arr[lo] = " + arr[lo] + " ≤ arr[mid] = " + arr[mid] + ": no drop on the left, so the LEFT half [" + arr[lo] + " .. " + arr[mid] + "] is sorted." });
+        if (arr[lo] <= x && x < arr[mid]) {
+          hi = mid - 1;
+          frames.push({ line: 6, cells: arr, hi: shade(), ptrs: { lo, hi }, vars: { x, lo, mid, hi, steps }, note: x + " is between " + arr[lo] + " and " + arr[mid] + ", so it must be in the left half: hi = mid - 1 = " + hi + "." });
+        } else {
+          lo = mid + 1;
+          frames.push({ line: 7, cells: arr, hi: shade(), ptrs: { lo, hi }, vars: { x, lo, mid, hi, steps }, note: x + " is not between those ends, so it can't be in the sorted left half. Go right: lo = mid + 1 = " + lo + "." });
+        }
+      } else {
+        frames.push({ line: 8, cells: arr, hi: shade(Object.assign(range(mid, hi, "done"), { [mid]: "compare" })), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, steps }, note: "arr[lo] = " + arr[lo] + " > arr[mid] = " + arr[mid] + ": the drop is on the left, so the RIGHT half [" + arr[mid] + " .. " + arr[hi] + "] is sorted." });
+        if (arr[mid] < x && x <= arr[hi]) {
+          lo = mid + 1;
+          frames.push({ line: 9, cells: arr, hi: shade(), ptrs: { lo, hi }, vars: { x, lo, mid, hi, steps }, note: x + " is between " + arr[mid] + " and " + arr[hi] + ", so it must be in the right half: lo = mid + 1 = " + lo + "." });
+        } else {
+          hi = mid - 1;
+          frames.push({ line: 10, cells: arr, hi: shade(), ptrs: { lo, hi }, vars: { x, lo, mid, hi, steps }, note: x + " is not between those ends, so it can't be in the sorted right half. Go left: hi = mid - 1 = " + hi + "." });
+        }
+      }
+    }
+    Lesson.trace("#rotated", {
+      stacked: true,
+      title: "searchRotated([20, 24, 29, 33, 41, 2, 5, 8, 11, 15], 15)",
+      code: [
+        "let lo = 0, hi = arr.length - 1;",
+        "while (lo <= hi) {",
+        "  const mid = Math.floor((lo + hi) / 2);",
+        "  if (arr[mid] === x) return mid;",
+        "  if (arr[lo] <= arr[mid]) {           // left half sorted",
+        "    if (arr[lo] <= x && x < arr[mid]) hi = mid - 1;",
+        "    else lo = mid + 1;",
+        "  } else {                             // right half sorted",
+        "    if (arr[mid] < x && x <= arr[hi]) lo = mid + 1;",
+        "    else hi = mid - 1;",
+        "  }",
+        "}",
+        "return -1;",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: peak finding, simulated.
+  (function () {
+    const arr = [1, 5, 3, 4, 8, 12, 9, 2, 6, 1];
+    const n = arr.length;
+    const frames = [];
+    let lo = 0, hi = n - 1, steps = 0;
+    const shade = (extra) => {
+      const h = {};
+      for (let i = 0; i < n; i++) if (i < lo || i > hi) h[i] = "dim";
+      return Object.assign(h, extra || {});
+    };
+    frames.push({ line: 1, cells: arr, hi: shade(), ptrs: { lo, hi }, vars: { lo, hi, steps }, note: "Peaks here: 5 (index 1), 12 (index 5) and 6 (index 8). Invariant: a peak is always inside [lo, hi]." });
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      steps++;
+      frames.push({ line: 3, cells: arr, hi: shade({ [mid]: "compare", [mid + 1]: "compare" }), ptrs: { lo, mid, hi }, vars: { lo, mid, hi, steps, "arr[mid]": arr[mid], "arr[mid+1]": arr[mid + 1] }, note: "mid = " + mid + ". Compare arr[mid] = " + arr[mid] + " with the next one, " + arr[mid + 1] + "." });
+      if (arr[mid] < arr[mid + 1]) {
+        lo = mid + 1;
+        frames.push({ line: 4, cells: arr, hi: shade({ [lo]: "active" }), ptrs: { lo, hi }, vars: { lo, mid, hi, steps }, note: arr[mid] + " < " + arr[mid + 1] + ": uphill to the right. The climb must stop somewhere right of mid, so a peak is there: lo = mid + 1 = " + lo + "." });
+      } else {
+        hi = mid;
+        frames.push({ line: 5, cells: arr, hi: shade({ [mid]: "active" }), ptrs: { lo, hi }, vars: { lo, mid, hi, steps }, note: arr[mid] + " > " + arr[mid + 1] + ": downhill. mid itself might be the top, or there's a peak to its left: hi = mid = " + hi + "." });
+      }
+    }
+    frames.push({ line: 7, cells: arr, hi: shade({ [lo]: "found" }), ptrs: { lo, hi }, vars: { lo, hi, steps }, note: "lo === hi === " + lo + ": arr[" + lo + "] = " + arr[lo] + " is a peak (" + arr[lo - 1] + " < " + arr[lo] + " > " + arr[lo + 1] + "). Found in " + steps + " steps." });
+    Lesson.trace("#peak", {
+      stacked: true,
+      title: "findPeak([1, 5, 3, 4, 8, 12, 9, 2, 6, 1])",
+      code: [
+        "let lo = 0, hi = arr.length - 1;",
+        "while (lo < hi) {",
+        "  const mid = Math.floor((lo + hi) / 2);",
+        "  if (arr[mid] < arr[mid + 1]) lo = mid + 1;  // uphill",
+        "  else hi = mid;                              // downhill",
+        "}",
+        "return lo;",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: search a sorted matrix as a flat array.
+  (function () {
+    const grid = [[2, 4, 7, 9], [12, 15, 18, 21], [25, 28, 30, 33]];
+    const rows = grid.length, cols = grid[0].length, x = 28;
+    const frames = [];
+    let lo = 0, hi = rows * cols - 1;
+    const shade = (extra) => {
+      const h = {};
+      for (let k = 0; k < rows * cols; k++) if (k < lo || k > hi) h[Math.floor(k / cols) + "," + (k % cols)] = "dim";
+      return Object.assign(h, extra || {});
+    };
+    frames.push({ line: 1, grid, ghi: shade(), vars: { x, rows, cols, lo, hi }, note: rows + " rows × " + cols + " columns = " + rows * cols + " cells, numbered 0 to " + hi + " in reading order." });
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const r = Math.floor(mid / cols), c = mid % cols, v = grid[r][c];
+      const key = r + "," + c;
+      frames.push({ line: 3, grid, ghi: shade({ [key]: "compare" }), vars: { x, lo, hi, mid }, note: "mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + "." });
+      frames.push({ line: 4, grid, ghi: shade({ [key]: "compare" }), vars: { x, lo, hi, mid, row: r, col: c, v }, note: "Cell " + mid + " is row Math.floor(" + mid + " / " + cols + ") = " + r + ", column " + mid + " % " + cols + " = " + c + ". It holds " + v + "." });
+      if (v === x) {
+        frames.push({ line: 5, grid, ghi: shade({ [key]: "found" }), vars: { x, lo, hi, mid, row: r, col: c, v }, note: v + " is " + x + ": return true." });
+        break;
+      }
+      if (v < x) {
+        lo = mid + 1;
+        frames.push({ line: 6, grid, ghi: shade({ [key]: "bad" }), vars: { x, lo, hi, mid }, note: v + " < " + x + ": every cell up to " + mid + " is too small. lo = " + lo + "." });
+      } else {
+        hi = mid - 1;
+        frames.push({ line: 7, grid, ghi: shade({ [key]: "bad" }), vars: { x, lo, hi, mid }, note: v + " > " + x + ": every cell from " + mid + " on is too big. hi = " + hi + "." });
+      }
+    }
+    Lesson.trace("#matrix", {
+      stacked: true,
+      title: "searchMatrix(grid, 28)",
+      code: [
+        "let lo = 0, hi = rows * cols - 1;",
+        "while (lo <= hi) {",
+        "  const mid = Math.floor((lo + hi) / 2);",
+        "  const v = grid[Math.floor(mid / cols)][mid % cols];",
+        "  if (v === x) return true;",
+        "  if (v < x) lo = mid + 1;",
+        "  else hi = mid - 1;",
+        "}",
+        "return false;",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

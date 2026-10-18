@@ -23,6 +23,10 @@ Each session: **~15 min concept → ~25 min questions → ~5 min test, commit, p
 
 [`js-for-dsa/`](js-for-dsa) is a 10-day JavaScript track that gets you ready for DSA: numbers and digits, loops and counting steps, functions, arrays and two pointers, strings, objects and `Map`/`Set` as hash maps, sorting and sliding windows, then grids, recursion and binary search. Every day has an **animated lesson** (`concept.html`, open it in your browser) and 8 scaffolded questions. Start at [`js-for-dsa/index.html`](js-for-dsa/index.html); details in [its README](js-for-dsa/README.md).
 
+## DSA in JavaScript
+
+After JS for DSA comes [`dsa/`](dsa): data structures and algorithms in five phases (foundations → array and string patterns → linked lists, stacks and queues → trees and graphs → greedy and dynamic programming), built one phase at a time, in the same format. Check a day with `./check.sh dsa 1`. Start at [`dsa/index.html`](dsa/index.html); the full plan is in [its README](dsa/README.md).
+
 What's coming next: [ROADMAP.md](ROADMAP.md). What's done: [PROGRESS.md](PROGRESS.md).
 
 ## Setup (once)

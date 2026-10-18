@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binary Search Templates</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 10</p>
+  <h1>Binary search templates</h1>
+  <p class="lede">You already know binary search finds <code>x</code> in O(log n). Today you learn to write <b>any</b> binary search (first, last, how many, where would it go) without off-by-one bugs, by deciding what <code>lo</code> and <code>hi</code> mean before you write a single line.</p>
+  <nav class="daynav"><a href="../day-09/concept.html">← Day 9</a><a href="../day-11/concept.html">Day 11 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Why "find x" is not enough</h2>
+  <p>The binary search from JS for DSA Day 10 answers one question: <i>is x here, and where?</i> On <code>[2, 4, 4, 4, 6]</code> searching for 4, it stops at index 2, the middle 4. But interviews ask more:</p>
+  <ul>
+    <li>Where is the <b>first</b> 4? Where is the <b>last</b> 4? How <b>many</b> 4s are there?</li>
+    <li>5 isn't there. Where <b>would it go</b>?</li>
+    <li>What is the biggest value that is still <b>≤ 5</b>?</li>
+  </ul>
+  <p>Each one is a binary search with a slightly different loop. Guessing the <code>&lt;</code> vs <code>&lt;=</code> and the <code>+ 1</code>s until the tests pass is how off-by-one bugs are born. Instead, we pick an <b>invariant</b>: a sentence about <code>lo</code> and <code>hi</code> that stays true every step.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Two templates, two meanings of hi</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th></th><th>closed range [lo, hi]</th><th>half-open range [lo, hi)</th></tr>
+    <tr><td>start</td><td><code>lo = 0, hi = n - 1</code></td><td><code>lo = 0, hi = n</code></td></tr>
+    <tr><td>hi means</td><td>the last index still possible</td><td>one past the last index still possible</td></tr>
+    <tr><td>loop</td><td><code>while (lo &lt;= hi)</code></td><td><code>while (lo &lt; hi)</code></td></tr>
+    <tr><td>moves</td><td><code>lo = mid + 1</code> / <code>hi = mid - 1</code></td><td><code>lo = mid + 1</code> / <code>hi = mid</code></td></tr>
+    <tr><td>ends with</td><td><code>lo === hi + 1</code>: nothing left</td><td><code>lo === hi</code>: one answer left</td></tr>
+    <tr><td>best for</td><td>find x, "best answer so far"</td><td>lower / upper bound, "first index where…"</td></tr>
+  </table>
+  </div>
+  <p>The loop condition follows from the meaning: in <code>[lo, hi]</code> the range is empty when <code>lo &gt; hi</code>, so keep going while <code>lo &lt;= hi</code>. In <code>[lo, hi)</code> it is down to one answer when <code>lo === hi</code>, so keep going while <code>lo &lt; hi</code>.</p>
+  <p class="callout"><strong>Pick one meaning and never mix them.</strong> Most bugs are a loop written for one template with moves from the other.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Lower bound: the first index with arr[i] ≥ x</h2>
+<pre><code>function lowerBound(arr, x) {
+  let lo = 0, hi = arr.length;     // the answer can be arr.length
+  while (lo &lt; hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (arr[mid] &gt;= x) hi = mid;   // mid COULD be the answer: keep it
+    else lo = mid + 1;             // mid is too small: drop it
+  }
+  return lo;                       // lo === hi: the one answer left
+}</code></pre>
+  <p><b>Invariant: the answer is always inside [lo, hi].</b> When <code>arr[mid] &gt;= x</code>, mid might be the first such index, so we can't throw it away: <code>hi = mid</code>, not <code>mid - 1</code>. When <code>arr[mid] &lt; x</code>, mid and everything left of it are too small: <code>lo = mid + 1</code>.</p>
+  <p>Picture the array as a row of "no, no, no, yes, yes" answers to <i>is arr[i] ≥ x?</i>. Lower bound finds the first "yes". If there is no "yes" at all, the answer is <code>arr.length</code>, which is why <code>hi</code> starts there.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Watch it run: lower bound converging</h2>
+  <p>Find the first 5 in a row with four 5s. Watch <code>lo</code> and <code>hi</code> walk towards each other. Grey boxes are outside <code>[lo, hi]</code>: the invariant says the answer can't be there. <code>steps</code> counts the loop runs.</p>
+  <div id="lower"></div>
+  <p>9 items, 3 steps (log₂ 9 is about 3.2). Even when <code>arr[mid]</code> is exactly 5, the search does <b>not</b> stop: it keeps going left, because an earlier 5 might exist.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Upper bound, and what the pair gives you</h2>
+  <p><b>Upper bound</b> is the first index with <code>arr[i] &gt; x</code> (strictly bigger). It is lower bound with one character changed: <code>arr[mid] &gt; x</code> instead of <code>&gt;=</code>.</p>
+<pre><code>arr = [2, 3, 5, 5, 5, 5, 8, 9]
+lowerBound(arr, 5)   // 2: the first 5
+upperBound(arr, 5)   // 6: just past the last 5
+
+// the 5s are the block [lowerBound, upperBound)
+first 5   = lowerBound(arr, 5)          // 2
+last 5    = upperBound(arr, 5) - 1      // 5
+how many  = upperBound(arr, 5) - lowerBound(arr, 5)   // 4
+
+lowerBound(arr, 6)   // 6  and  upperBound(arr, 6)  // 6
+// 6 is missing: both bounds land on the same spot, so 6 - 6 = 0</code></pre>
+  <p class="callout"><strong>Check before you read.</strong> A bound can be <code>arr.length</code>, which is off the end. For "first x", test <code>i &lt; arr.length &amp;&amp; arr[i] === x</code> before you say you found it.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Watch it run: first vs last occurrence with a saved answer</h2>
+  <p>There is a second way to find the first or last x: the closed template plus a variable <code>ans</code>. When <code>arr[mid] === x</code>, write it down, then <b>keep searching</b> the side where a better answer could be. The two searches below differ in one line only.</p>
+  <div id="first"></div>
+  <div id="last"></div>
+  <p>Same array, same <code>x</code>, same first mid. Searching left finds index 1; searching right finds index 5. This "save it and keep going" form is what you'll use for floor and ceiling questions, and on Day 12.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. mid without overflow</h2>
+<pre><code>const mid = Math.floor((lo + hi) / 2);       // fine in JavaScript
+const mid2 = lo + Math.floor((hi - lo) / 2);  // the same number, overflow-safe</code></pre>
+  <p>In Java or C++, <code>lo + hi</code> is an <code>int</code> and can overflow past about 2.1 billion, so they write <code>lo + (hi - lo) / 2</code>. JavaScript numbers are exact up to 2⁵³, so <code>Math.floor((lo + hi) / 2)</code> is safe, but you'll see the other form in interview solutions: now you know it's the same thing.</p>
+  <p class="callout"><strong>Don't use <code>(lo + hi) &gt;&gt; 1</code> on big numbers.</strong> <code>&gt;&gt;</code> turns its input into a 32-bit integer first, so it breaks above about 2.1 billion. On Day 12 the search range can be that big.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Watch it run: an off-by-one that never ends</h2>
+  <p>Here someone wants the <b>last</b> index with <code>arr[i] &lt;= x</code>, uses <code>while (lo &lt; hi)</code>, and writes <code>lo = mid</code> because mid might be the answer. Looks reasonable. Watch what happens when only two candidates are left.</p>
+  <div id="stuck"></div>
+  <p class="callout"><strong>The rule:</strong> with <code>while (lo &lt; hi)</code>, every step must shrink the range. <code>hi = mid</code> always does (mid &lt; hi), but <code>lo = mid</code> doesn't when <code>mid === lo</code>. Either round mid up with <code>Math.floor((lo + hi + 1) / 2)</code>, or (easier) switch to the closed template with <code>ans</code> from section 6.</p>
+</section>
+
+<section class="card reveal">
+  <h2>9. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal. <code>arr = [1, 3, 3, 3, 7]</code> for all of them.</p>
+  <details class="predict"><summary><code>lowerBound(arr, 3)</code> and <code>upperBound(arr, 3)</code></summary><div><p><code>1</code> and <code>4</code>. The 3s fill indices 1, 2, 3, so there are 4 - 1 = 3 of them.</p></div></details>
+  <details class="predict"><summary><code>lowerBound(arr, 8)</code></summary><div><p><code>5</code>, which is <code>arr.length</code>. Nothing is ≥ 8, so the answer is "off the end". Reading <code>arr[5]</code> gives <code>undefined</code>.</p></div></details>
+  <details class="predict"><summary><code>lowerBound(arr, 0)</code> and <code>upperBound(arr, 0)</code></summary><div><p><code>0</code> and <code>0</code>. Everything is bigger than 0, so both bounds are the very first index, and the count of 0s is 0 - 0 = 0.</p></div></details>
+  <details class="predict"><summary>The classic <code>lo &lt;= hi</code> search for 3: which index does it return?</summary><div><p><code>2</code>. lo = 0, hi = 4, mid = 2, and <code>arr[2]</code> is 3, so it stops. It found <b>a</b> 3, not the first one. That is why we need lower bound.</p></div></details>
+  <details class="predict"><summary>The classic search for 5 (not there): what are lo and hi when the loop ends?</summary><div><p><code>lo = 4, hi = 3</code>. mid 2 (3 &lt; 5, lo = 3), mid 3 (3 &lt; 5, lo = 4), mid 4 (7 &gt; 5, hi = 3). <code>lo</code> is 4: exactly where 5 would be inserted. You'll use this in Q7.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>10. An off-by-one checklist</h2>
+  <ol>
+    <li><b>Write the invariant first.</b> "The answer is in [lo, hi]" or "in [lo, hi)". Say it out loud.</li>
+    <li><b>Loop condition from the invariant:</b> closed → <code>lo &lt;= hi</code>, half-open → <code>lo &lt; hi</code>.</li>
+    <li><b>Every move keeps the invariant:</b> only drop indices you are <i>sure</i> are not the answer.</li>
+    <li><b>Every move shrinks the range</b>, or the loop runs forever.</li>
+    <li><b>Test the edges:</b> empty array, one element, x smaller than everything, x bigger than everything, all elements equal.</li>
+  </ol>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where bounds show up</h2>
+  <p>Lower and upper bound are the bricks of every binary search to come. Tomorrow you'll search <b>rotated</b> arrays and find peaks; on Day 12 you'll binary search over the <b>answer</b> itself ("what is the smallest speed that works?"), which is a lower bound on a yes/no question. In interviews: "find first and last position of an element", "search insert position", "count of x in a sorted array", "floor and ceiling", "k closest elements". Other languages ship these as <code>bisect_left</code> / <code>bisect_right</code> (Python) and <code>lower_bound</code> / <code>upper_bound</code> (C++).</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 10</code> after each one.</p>
+  <p><a href="../day-11/concept.html">Day 11 →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Shade everything outside the still-possible range.
+  const outside = (n, from, to, extra) => {
+    const h = {};
+    for (let i = 0; i < n; i++) if (i < from || i > to) h[i] = "dim";
+    return Object.assign(h, extra || {});
+  };
+
+  // Trace 1: lower bound for x = 5, simulated.
+  (function () {
+    const arr = [2, 3, 5, 5, 5, 5, 8, 9, 12];
+    const x = 5, n = arr.length;
+    const frames = [];
+    let lo = 0, hi = n, steps = 0;
+    frames.push({ line: 2, cells: arr, hi: outside(n, lo, hi), ptrs: { lo, hi }, vars: { x, lo, hi, steps }, note: "lo = 0 and hi = " + n + " (one past the end: if nothing were ≥ " + x + ", the answer would be " + n + "). The answer is somewhere in [0, " + n + "]." });
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      steps++;
+      frames.push({ line: 4, cells: arr, hi: outside(n, lo, hi, { [mid]: "compare" }), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, steps, "arr[mid]": arr[mid] }, note: "lo < hi, so more than one answer is possible. mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + ", and arr[" + mid + "] is " + arr[mid] + "." });
+      if (arr[mid] >= x) {
+        hi = mid;
+        frames.push({ line: 5, cells: arr, hi: outside(n, lo, hi, { [mid]: "found" }), ptrs: { lo, hi }, vars: { x, lo, mid, hi, steps }, note: arr[mid] + " ≥ " + x + ": index " + mid + " COULD be the first one, so keep it. hi = mid = " + hi + ". Everything after it is dropped." });
+      } else {
+        lo = mid + 1;
+        frames.push({ line: 6, cells: arr, hi: outside(n, lo, hi, { [mid]: "bad" }), ptrs: { lo, hi }, vars: { x, lo, mid, hi, steps }, note: arr[mid] + " < " + x + ": index " + mid + " and everything left of it are too small. lo = mid + 1 = " + lo + "." });
+      }
+    }
+    frames.push({ line: 8, cells: arr, hi: outside(n, lo, lo - 1, { [lo]: "found" }), ptrs: { lo, hi }, vars: { x, lo, hi, steps }, note: "lo === hi === " + lo + ": only one answer is left, so the loop stops. The first element ≥ " + x + " is at index " + lo + ", found in " + steps + " steps." });
+    Lesson.trace("#lower", {
+      stacked: true,
+      title: "lowerBound([2, 3, 5, 5, 5, 5, 8, 9, 12], 5)",
+      code: [
+        "function lowerBound(arr, x) {",
+        "  let lo = 0, hi = arr.length;",
+        "  while (lo < hi) {",
+        "    const mid = Math.floor((lo + hi) / 2);",
+        "    if (arr[mid] >= x) hi = mid;",
+        "    else lo = mid + 1;",
+        "  }",
+        "  return lo;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Traces 2 and 3: first and last occurrence with a saved answer, simulated.
+  function occurrence(selector, goLeft) {
+    const arr = [1, 4, 4, 4, 4, 4, 6, 9];
+    const x = 4, n = arr.length;
+    const frames = [];
+    let lo = 0, hi = n - 1, ans = -1;
+    const keep = () => (ans >= 0 ? { [ans]: "found" } : {});
+    frames.push({ line: 2, cells: arr, hi: outside(n, lo, hi), ptrs: { lo, hi }, vars: { x, lo, hi, ans }, note: "Closed range: lo = 0, hi = " + hi + ". ans = -1 means 'no " + x + " found yet'." });
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      frames.push({ line: 4, cells: arr, hi: outside(n, lo, hi, Object.assign(keep(), { [mid]: "compare" })), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, ans, "arr[mid]": arr[mid] }, note: "mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + ", arr[" + mid + "] = " + arr[mid] + "." });
+      if (arr[mid] === x) {
+        ans = mid;
+        if (goLeft) hi = mid - 1; else lo = mid + 1;
+        frames.push({ line: 6, cells: arr, hi: outside(n, lo, hi, keep()), ptrs: { lo, hi }, vars: { x, lo, mid, hi, ans }, note: "It's a " + x + "! Save it: ans = " + mid + ". But a " + (goLeft ? "more left" : "more right") + " " + x + " might exist, so keep looking " + (goLeft ? "left: hi = mid - 1 = " + hi : "right: lo = mid + 1 = " + lo) + "." });
+      } else if (arr[mid] < x) {
+        lo = mid + 1;
+        frames.push({ line: 7, cells: arr, hi: outside(n, lo, hi, keep()), ptrs: { lo, hi }, vars: { x, lo, mid, hi, ans }, note: arr[mid] + " < " + x + ": go right. lo = " + lo + "." });
+      } else {
+        hi = mid - 1;
+        frames.push({ line: 8, cells: arr, hi: outside(n, lo, hi, keep()), ptrs: { lo, hi }, vars: { x, lo, mid, hi, ans }, note: arr[mid] + " > " + x + ": go left. hi = " + hi + "." });
+      }
+    }
+    frames.push({ line: 10, cells: arr, hi: keep(), ptrs: { lo, hi }, vars: { x, lo, hi, ans }, note: "lo (" + lo + ") passed hi (" + hi + "): nothing left to check. The " + (goLeft ? "first" : "last") + " " + x + " is at index " + ans + "." });
+    Lesson.trace(selector, {
+      stacked: true,
+      title: goLeft ? "First 4: on a match, go LEFT" : "Last 4: on a match, go RIGHT",
+      code: [
+        "function " + (goLeft ? "first" : "last") + "(arr, x) {",
+        "  let lo = 0, hi = arr.length - 1, ans = -1;",
+        "  while (lo <= hi) {",
+        "    const mid = Math.floor((lo + hi) / 2);",
+        "    if (arr[mid] === x) {",
+        goLeft ? "      ans = mid; hi = mid - 1;  // keep going left" : "      ans = mid; lo = mid + 1;  // keep going right",
+        "    } else if (arr[mid] < x) lo = mid + 1;",
+        "    else hi = mid - 1;",
+        "  }",
+        "  return ans;",
+        "}",
+      ],
+      frames,
+    });
+  }
+  occurrence("#first", true);
+  occurrence("#last", false);
+
+  // Trace 4: the buggy "last index with arr[i] <= x" that gets stuck, simulated for a few rounds.
+  (function () {
+    const arr = [1, 3, 5, 8, 9];
+    const x = 8, n = arr.length;
+    const frames = [];
+    let lo = 0, hi = n - 1, rounds = 0;
+    frames.push({ line: 2, cells: arr, hi: outside(n, lo, hi), ptrs: { lo, hi }, vars: { x, lo, hi, rounds }, note: "We want the LAST index with arr[i] ≤ " + x + " (the answer is 3). lo = 0, hi = " + hi + "." });
+    let stuck = 0;
+    while (lo < hi && stuck < 3) {
+      const mid = Math.floor((lo + hi) / 2);
+      rounds++;
+      frames.push({ line: 4, cells: arr, hi: outside(n, lo, hi, { [mid]: "compare" }), ptrs: { lo, mid, hi }, vars: { x, lo, mid, hi, rounds }, note: "Round " + rounds + ": mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + ", arr[mid] = " + arr[mid] + "." });
+      if (arr[mid] <= x) {
+        const before = lo;
+        lo = mid;
+        if (lo === before) stuck++;
+        frames.push({ line: 5, cells: arr, hi: outside(n, lo, hi, { [mid]: stuck ? "bad" : "found" }), ptrs: { lo, hi }, vars: { x, lo, mid, hi, rounds }, note: arr[mid] + " ≤ " + x + ", so lo = mid = " + lo + "." + (stuck ? " But lo was ALREADY " + before + ": the range [" + lo + ", " + hi + "] did not shrink!" : "") });
+      } else {
+        hi = mid - 1;
+        frames.push({ line: 6, cells: arr, hi: outside(n, lo, hi, { [mid]: "dim" }), ptrs: { lo, hi }, vars: { x, lo, mid, hi, rounds }, note: arr[mid] + " > " + x + ", so hi = mid - 1 = " + hi + "." });
+      }
+    }
+    frames.push({ line: 3, cells: arr, hi: outside(n, lo, hi, { [lo]: "bad", [hi]: "bad" }), ptrs: { lo, hi }, vars: { x, lo, hi }, note: "And again, and again: lo = " + lo + ", hi = " + hi + " forever. mid always rounds DOWN to lo, and lo = mid changes nothing. The tab freezes. Fix: mid = Math.floor((lo + hi + 1) / 2) gives mid = " + Math.floor((lo + hi + 1) / 2) + "." });
+    Lesson.trace("#stuck", {
+      title: "A loop that never ends",
+      code: [
+        "function lastAtMost(arr, x) { // BUGGY",
+        "  let lo = 0, hi = arr.length - 1;",
+        "  while (lo < hi) {",
+        "    const mid = Math.floor((lo + hi) / 2);",
+        "    if (arr[mid] <= x) lo = mid; // bug",
+        "    else hi = mid - 1;",
+        "  }",
+        "  return lo;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

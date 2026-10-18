@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Space and Built-ins</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 2</p>
+  <h1>Space complexity and the cost of built-ins</h1>
+  <p class="lede">Time is not the only bill: memory counts too. And one innocent-looking method call like <code>includes</code> or <code>shift</code> can hide a whole loop. Today you learn to see both.</p>
+  <nav class="daynav"><a href="../day-01/concept.html">← Day 1</a><a href="../day-03/concept.html">Day 3 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Space complexity: the extra memory</h2>
+  <p>Space complexity counts the <b>extra</b> memory an algorithm needs on top of its input, as the input grows. The input itself is not counted: it was there anyway.</p>
+<pre><code>function sum(arr) {
+  let total = 0;                 // one number, whatever n is
+  for (const x of arr) total += x;
+  return total;
+}                                // extra space: O(1)
+
+function doubled(arr) {
+  const out = [];                // grows to n items
+  for (const x of arr) out.push(x * 2);
+  return out;
+}                                // extra space: O(n)
+
+function table(n) {
+  return Array.from({ length: n }, () =&gt; new Array(n).fill(0));
+}                                // extra space: O(n²)</code></pre>
+  <p>A handful of variables is <b>O(1)</b> space, no matter how big the input is. A new array, Set, Map or string that grows with the input is <b>O(n)</b>.</p>
+  <p class="callout"><strong>The output can count.</strong> If a question asks you to return a new array, that O(n) is unavoidable. When people say "O(1) space" they usually mean "O(1) besides the output".</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. In place vs making a copy</h2>
+  <p>Working <b>in place</b> means changing the input array itself instead of building a new one. You did this in JS for DSA Day 5 with two pointers.</p>
+<pre><code>// O(n) extra space: a whole new array
+const rev = [...arr].reverse();
+
+// O(1) extra space: swap the ends inward
+let lo = 0, hi = arr.length - 1;
+while (lo &lt; hi) {
+  [arr[lo], arr[hi]] = [arr[hi], arr[lo]];
+  lo++; hi--;
+}</code></pre>
+  <p>Both are O(n) time. The difference is memory. For a million numbers, the copy needs another few megabytes; the in-place version needs two numbers.</p>
+  <p class="callout"><strong>In place changes the caller's array.</strong> Arrays are passed by reference, so whoever called your function sees the change. Only do it when the question asks for it (like Q8).</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Best, worst and average case</h2>
+  <p>The same code can take a different number of steps on different inputs of the same size. Linear search:</p>
+<pre><code>function find(arr, x) {
+  for (let i = 0; i &lt; arr.length; i++) {
+    if (arr[i] === x) return i;
+  }
+  return -1;
+}</code></pre>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Case</th><th>When</th><th>Comparisons</th><th>Big-O</th></tr>
+    <tr><td>best</td><td>x is the first item</td><td>1</td><td>O(1)</td></tr>
+    <tr><td>worst</td><td>x is last, or missing</td><td>n</td><td>O(n)</td></tr>
+    <tr><td>average</td><td>x is equally likely anywhere</td><td>about n / 2</td><td>O(n)</td></tr>
+  </table>
+  </div>
+  <p>When someone says "linear search is O(n)", they mean the <b>worst case</b>. That is the default: it is a promise that holds for every input. The best case is rarely interesting ("it's fast if you're lucky").</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. What JavaScript's built-ins really cost</h2>
+  <p>A method call is one line, but not one step. Inside, many of them loop over the array:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Operation</th><th>Time</th><th>Why</th></tr>
+    <tr><td><code>arr[i]</code>, <code>arr.length</code></td><td>O(1)</td><td>jumps straight to the slot</td></tr>
+    <tr><td><code>push</code>, <code>pop</code></td><td>O(1)*</td><td>work at the end, nothing moves (* amortized, section 6)</td></tr>
+    <tr><td><code>shift</code>, <code>unshift</code></td><td>O(n)</td><td>every other item moves one slot</td></tr>
+    <tr><td><code>splice(i, ...)</code></td><td>O(n)</td><td>everything after i moves</td></tr>
+    <tr><td><code>includes</code>, <code>indexOf</code>, <code>find</code></td><td>O(n)</td><td>a linear search</td></tr>
+    <tr><td><code>slice(a, b)</code></td><td>O(b − a)</td><td>copies that many items</td></tr>
+    <tr><td><code>[...arr]</code>, <code>concat</code>, <code>map</code>, <code>filter</code></td><td>O(n)</td><td>build a new array: O(n) space too</td></tr>
+    <tr><td><code>sort</code></td><td>O(n log n)</td><td>a real sorting algorithm (Days 8–9)</td></tr>
+    <tr><td><code>set.has</code>, <code>set.add</code>, <code>map.get</code>, <code>map.set</code></td><td>O(1) on average</td><td>a hash jumps to the right bucket</td></tr>
+    <tr><td><code>str.split</code>, <code>arr.join</code>, <code>Object.keys</code></td><td>O(n)</td><td>visit every item</td></tr>
+  </table>
+  </div>
+  <p class="callout"><strong>A hidden loop inside a loop is O(n²).</strong> <code>for (x of a) if (b.includes(x))</code> looks like one loop, but each <code>includes</code> is a loop over b. Same trap: <code>shift()</code> or <code>splice()</code> inside a loop.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: includes() scans, Set.has() jumps</h2>
+  <p>Looking for 9, then 5, in the same 8 numbers. <code>includes</code> compares one item at a time. A <code>Set</code> stores each value in a <b>bucket</b> picked by a quick calculation on the value (here, simplified: <code>value % 8</code>), so it only looks in one bucket.</p>
+  <div id="lookup"></div>
+  <p>Building the Set costs O(n) once. After that, each lookup is O(1). If you look up many values, that trade is a huge win: Q1, Q3 and Q4 all use it.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Amortized: why push is O(1)</h2>
+  <p>An array lives in a block of memory with some spare room. When the room runs out, JavaScript grabs a block about <b>twice as big</b> and copies everything over. That copy is O(n), but it happens rarely:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Push number</th><th>Room (before → after)</th><th>Copies</th></tr>
+    <tr><td>1</td><td>0 → 1</td><td>0</td></tr>
+    <tr><td>2</td><td>1 → 2</td><td>1</td></tr>
+    <tr><td>3</td><td>2 → 4</td><td>2</td></tr>
+    <tr><td>5</td><td>4 → 8</td><td>4</td></tr>
+    <tr><td>9</td><td>8 → 16</td><td>8</td></tr>
+    <tr><td>other pushes</td><td>room left</td><td>0</td></tr>
+  </table>
+  </div>
+  <p>For 16 pushes the copies add up to 1 + 2 + 4 + 8 = 15, less than 16. Spread over all the pushes, that is <b>less than one extra step each</b>. "Amortized O(1)" means: one push may be slow, but n pushes cost O(n) in total.</p>
+  <p class="callout"><strong>Strings don't get this deal.</strong> Strings can't be changed, so <code>s += ch</code> may build a brand new string each time: n appends can cost 1 + 2 + ... + n = O(n²). Modern engines often optimise it, but the safe habit is: push the pieces into an array, then <code>join("")</code> once.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Spend space to save time: prefix sums</h2>
+  <p>Many questions ask the sum of a range <code>arr[l..r]</code>, again and again. Looping each time is O(n) per question. Instead, build one extra array once:</p>
+<pre><code>// prefix[i] = sum of the first i values, so prefix[0] = 0
+const prefix = [0];
+for (const x of arr) prefix.push(prefix[prefix.length - 1] + x);</code></pre>
+  <p>Now the sum of <code>arr[l..r]</code> is "everything up to r" minus "everything before l". Watch it build, then answer three ranges with <b>one subtraction each</b>:</p>
+  <div id="prefix"></div>
+  <p>O(n) time and O(n) space to build, then O(1) per query. With q queries: O(n + q) instead of O(n · q).</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary>Time of: <code>for (const x of a) if (b.includes(x)) count++;</code> (both have n items)</summary><div><p><b>O(n²)</b>. n rounds, and each <code>includes</code> scans up to n items. With <code>const s = new Set(b)</code> and <code>s.has(x)</code> it becomes O(n).</p></div></details>
+  <details class="predict"><summary>Time of: <code>while (queue.length) { const x = queue.shift(); ... }</code></summary><div><p><b>O(n²)</b>. Each <code>shift</code> moves every remaining item. Reading with an index (<code>queue[head++]</code>) makes it O(n).</p></div></details>
+  <details class="predict"><summary>Extra space of: <code>const rev = arr.slice().reverse();</code></summary><div><p><b>O(n)</b>. <code>slice()</code> copies the whole array. <code>reverse()</code> itself works in place, on the copy.</p></div></details>
+  <details class="predict"><summary>Comparisons for <code>[4, 8, 15].indexOf(4)</code>, and for <code>.indexOf(42)</code>?</summary><div><p><b>1</b> and <b>3</b>: best case and worst case. A missing value always costs a full scan.</p></div></details>
+  <details class="predict"><summary><code>prefix = [0, 2, 6, 7, 10]</code> (from <code>[2, 4, 1, 3]</code>). Sum of <code>arr[1..2]</code>?</summary><div><p><b>5</b> = prefix[3] − prefix[1] = 7 − 2. That is 4 + 1.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where this shows up</h2>
+  <p>Interviewers almost always follow "what's the time complexity?" with "and the space?", and then "can you do it in O(1) extra space?". The classic answers: two pointers and read/write pointers (in place, O(1)), versus a Set or Map (O(n) space bought for O(n) time).</p>
+  <p>Spotting hidden loops (<code>includes</code>, <code>shift</code>, <code>splice</code>, <code>slice</code> in a loop) is how you find why a "correct" solution gets <i>Time Limit Exceeded</i>. Prefix sums come back in Phase 2 for "subarray sum equals k" and range problems, and in-place tricks power the sorting days.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 2</code> after each one.</p>
+  <p><a href="../day-03/concept.html">Next: Day 3 · thinking recursively →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: arr.includes scanning vs a Set jumping to one bucket.
+  (function () {
+    const arr = [8, 3, 11, 6, 15, 2, 9, 4];
+    const B = 8;
+    const frames = [];
+    // Build the buckets the way the (simplified) Set would.
+    const buckets = new Map();
+    for (let b = 0; b < B; b++) buckets.set("bucket " + b, []);
+    for (const x of arr) buckets.get("bucket " + (x % B)).push(x);
+    const view = () => new Map([...buckets].map(([k, v]) => [k, v.length ? v.join(", ") : "empty"]));
+
+    const notYet = new Map([["the Set", "not built yet"]]);
+    function scan(x, line) {
+      let comparisons = 0;
+      const seen = {};
+      frames.push({ line, cells: arr, map: notYet, hi: {}, ptrs: {}, vars: { x, comparisons }, note: "arr.includes(" + x + "): start at index 0 and compare one by one." });
+      for (let i = 0; i < arr.length; i++) {
+        comparisons++;
+        if (arr[i] === x) {
+          frames.push({ line, cells: arr, map: notYet, hi: Object.assign({}, seen, { [i]: "found" }), ptrs: { i }, vars: { x, i, comparisons }, note: "arr[" + i + "] is " + x + ": found, after " + comparisons + " comparisons." });
+          return;
+        }
+        seen[i] = "dim";
+        frames.push({ line, cells: arr, map: notYet, hi: Object.assign({}, seen, { [i]: "compare" }), ptrs: { i }, vars: { x, i, comparisons }, note: "arr[" + i + "] = " + arr[i] + " is not " + x + ". comparisons = " + comparisons + "." });
+      }
+      const all = {};
+      arr.forEach((_, i) => (all[i] = "bad"));
+      frames.push({ line, cells: arr, map: notYet, hi: all, ptrs: {}, vars: { x, comparisons }, note: x + " is not there, but we only know after checking all " + comparisons + " items. Worst case: n comparisons." });
+    }
+    function has(x, line) {
+      const key = "bucket " + (x % B);
+      const dimAll = {};
+      arr.forEach((_, i) => (dimAll[i] = "dim"));
+      frames.push({ line, cells: arr, hi: dimAll, map: view(), vars: { x, "x % 8": x % B, comparisons: 0 }, note: "set.has(" + x + "): no scanning. Work out the bucket: " + x + " % 8 = " + (x % B) + "." });
+      const inside = buckets.get(key);
+      const found = inside.includes(x);
+      const pos = arr.indexOf(x);
+      frames.push({ line, cells: arr, hi: found ? Object.assign({}, dimAll, { [pos]: "found" }) : dimAll, map: view(), mhi: key, vars: { x, "x % 8": x % B, comparisons: inside.length ? 1 : 0 }, note: "Jump straight to " + key + " (" + (inside.length ? "it holds " + inside.join(", ") : "it is empty") + "). " + (found ? x + " is there: true, after 1 comparison." : x + " is not there: false, with no scan at all.") });
+    }
+
+    frames.push({ line: 1, cells: arr, hi: {}, map: notYet, vars: {}, note: "8 numbers. We'll look for 9 (it's there) and 5 (it's not), first with includes, then with a Set." });
+    scan(9, 2);
+    scan(5, 3);
+    frames.push({ line: 5, cells: arr, hi: {}, map: view(), vars: {}, note: "new Set(arr): each value goes into bucket value % 8. That costs O(n), once. 3 and 11 share bucket 3: that's fine." });
+    has(9, 6);
+    has(5, 7);
+    frames.push({ line: 7, cells: arr, hi: {}, map: view(), vars: {}, note: "includes: 7 + 8 = 15 comparisons. Set.has: about 1 each. With 10⁶ items and 10⁶ lookups: 10¹² vs 10⁶." });
+    Lesson.trace("#lookup", {
+      title: "includes vs Set.has",
+    stacked: true,
+      mapLabel: "set buckets (value % 8)",
+      code: [
+        "const arr = [8, 3, 11, 6, 15, 2, 9, 4];",
+        "arr.includes(9);   // scan from the left",
+        "arr.includes(5);   // scan everything",
+        "",
+        "const set = new Set(arr);   // O(n) once",
+        "set.has(9);        // one bucket",
+        "set.has(5);        // one bucket",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: build a prefix-sum array, then answer range queries with one subtraction.
+  (function () {
+    const arr = [3, 1, 4, 1, 5, 9, 2];
+    const n = arr.length;
+    const top = [" "].concat(arr);              // arr[i] sits above prefix[i + 1]
+    const prefix = new Array(n + 1).fill("?");
+    prefix[0] = 0;
+    const frames = [];
+    const grid = () => [top.slice(), prefix.slice()];
+    const base = () => ({ "0,0": "dim" });
+    frames.push({ line: 1, grid: grid(), ghi: Object.assign(base(), { "1,0": "done" }), vars: { n }, note: "Top row: arr (shifted right by one). Bottom row: prefix. prefix[0] = 0: the sum of no values." });
+    for (let i = 0; i < n; i++) {
+      prefix[i + 1] = prefix[i] + arr[i];
+      const h = base();
+      for (let k = 0; k <= i; k++) h["1," + k] = "done";
+      Object.assign(h, { ["0," + (i + 1)]: "active", ["1," + i]: "compare", ["1," + (i + 1)]: "found" });
+      frames.push({ line: 3, grid: grid(), ghi: h, vars: { i, "arr[i]": arr[i], "prefix[i + 1]": prefix[i + 1] }, note: "prefix[" + (i + 1) + "] = prefix[" + i + "] + arr[" + i + "] = " + prefix[i] + " + " + arr[i] + " = " + prefix[i + 1] + "." });
+    }
+    const built = () => { const h = base(); for (let k = 0; k <= n; k++) h["1," + k] = "done"; return h; };
+    frames.push({ line: 4, grid: grid(), ghi: built(), vars: { n }, note: "Built in one pass: O(n) time, n + 1 extra slots. Now the queries." });
+    let answered = 0;
+    for (const [l, r] of [[2, 5], [0, 3], [4, 4]]) {
+      const h = base();
+      for (let k = l; k <= r; k++) h["0," + (k + 1)] = "found";
+      frames.push({ line: 5, grid: grid(), ghi: h, vars: { l, r }, note: "Query sum of arr[" + l + ".." + r + "]: the values " + arr.slice(l, r + 1).join(" + ") + ". A loop would add " + (r - l + 1) + " numbers." });
+      const ans = prefix[r + 1] - prefix[l];
+      answered++;
+      Object.assign(h, { ["1," + (r + 1)]: "active", ["1," + l]: "compare" });
+      frames.push({ line: 6, grid: grid(), ghi: h, vars: { l, r, "prefix[r + 1]": prefix[r + 1], "prefix[l]": prefix[l], answer: ans }, note: "prefix[" + (r + 1) + "] − prefix[" + l + "] = " + prefix[r + 1] + " − " + prefix[l] + " = " + ans + ". Everything up to r, minus everything before l. One step." });
+    }
+    frames.push({ line: 6, grid: grid(), ghi: built(), vars: { queries: answered }, note: "3 queries, 3 subtractions. However long the ranges are, each answer is O(1)." });
+    Lesson.trace("#prefix", {
+      title: "prefix sums",
+      stacked: true,
+      code: [
+        "const prefix = [0];",
+        "for (let i = 0; i < n; i++)",
+        "  prefix.push(prefix[i] + arr[i]);",
+        "// answer a query [l, r]:",
+        "const sum = (l, r) =>",
+        "  prefix[r + 1] - prefix[l];",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

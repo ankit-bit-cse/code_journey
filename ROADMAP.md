@@ -41,9 +41,15 @@ Before Phase 4, [`js-for-dsa/`](js-for-dsa) covers the JavaScript basics DSA nee
 | modules (`import / export`) | `Comparable` / `Comparator`, sorting objects |
 | the event loop | streams and lambdas |
 
-## Phase 4: DSA (mostly Java, some JavaScript)
+## Phase 4: DSA (JavaScript)
 
-Big-O thinking → linear and binary search → sorting (bubble, selection, insertion, merge) → two pointers and sliding window → hashing → stacks and queues → linked lists → trees and BST → recursion and backtracking → graphs (BFS, DFS) → simple dynamic programming.
+In [`dsa/`](dsa), built one phase at a time (JavaScript only for now; Java may come later):
+
+1. **Foundations:** Big-O, recursion, sorting algorithms (bubble → quick sort), binary search
+2. **Array and string patterns:** prefix sums, two pointers, sliding window, hashing, strings
+3. **Linear data structures:** just-enough classes, linked lists, stacks, queues
+4. **Trees and graphs:** binary trees, BST, heaps, backtracking, graphs
+5. **Techniques:** greedy, dynamic programming, bonus topics
 
 ## Phase 5: Web development (JavaScript)
 

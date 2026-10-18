@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thinking Recursively</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 3</p>
+  <h1>Thinking recursively</h1>
+  <p class="lede">A recursive function solves a big problem by trusting itself to solve a smaller copy of it. Today: how to design one in three steps, how to read the call stack, and how halving the problem makes power O(log n).</p>
+  <nav class="daynav"><a href="../day-02/concept.html">← Day 2</a><a href="../day-04/concept.html">Day 4 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Three questions, every time</h2>
+  <p>In JS for DSA Day 10 you met base cases and the call stack. Now we design recursion on purpose. Before writing any code, answer three questions:</p>
+  <ol>
+    <li><b>Base case:</b> what is the smallest input, the one I can answer right away?</li>
+    <li><b>Smaller problem:</b> which smaller input of the same kind is inside my problem?</li>
+    <li><b>Trust and combine:</b> if a call on the smaller input already returns the right answer, how do I build my answer from it?</li>
+  </ol>
+<pre><code>// The length of a string, without .length
+function len(s) {
+  if (s === "") return 0;        // 1. base case: the empty string
+  return 1 + len(s.slice(1));    // 2. smaller: s without its first letter
+}                                // 3. combine: one more than that</code></pre>
+  <p class="callout"><strong>Trust, don't trace.</strong> When you write <code>len(s.slice(1))</code>, do not follow it in your head all the way down. Assume it works (it will, if the base case and the step are right) and only ask: "given that answer, what is mine?". This is called the <b>leap of faith</b>.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Write the recursive formula first</h2>
+  <p>A good habit: write the idea as a formula, then turn it into code line by line.</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Problem</th><th>Base case</th><th>Formula</th></tr>
+    <tr><td>n!</td><td><code>0! = 1</code></td><td><code>n! = n × (n − 1)!</code></td></tr>
+    <tr><td>number of digits of n (n ≥ 1)</td><td><code>n &lt; 10 → 1</code></td><td><code>digits(n) = 1 + digits(⌊n / 10⌋)</code></td></tr>
+    <tr><td>gcd(a, b)</td><td><code>b = 0 → a</code></td><td><code>gcd(a, b) = gcd(b, a % b)</code></td></tr>
+    <tr><td>is <code>arr</code> all positive?</td><td>empty → true</td><td>first &gt; 0 <b>and</b> the rest all positive</td></tr>
+    <tr><td><code>[n, n − 1, ..., 1]</code></td><td><code>0 → []</code></td><td><code>[n, ...list(n − 1)]</code></td></tr>
+  </table>
+  </div>
+  <p>Notice the shapes: <b>numbers</b> get smaller with <code>n − 1</code> or <code>⌊n / 10⌋</code>, <b>strings and arrays</b> get smaller by dropping the first item (or by moving an index, Day 4).</p>
+  <p class="callout"><strong>The base case must be reachable.</strong> If the step jumps over it, the calls never stop. <code>f(n) = f(n − 2)</code> with base case <code>n === 0</code> never stops for odd n: 3, 1, −1, −3, ... Use <code>n &lt;= 0</code> or add a base case for 1.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: the call stack going down and coming back</h2>
+  <p><code>countEven(n)</code> counts the even digits of n. Each call takes the last digit, then <b>waits</b> on the stack for the call on the rest. On the way back up, each waiting call finishes its own little sum.</p>
+  <div id="stack"></div>
+  <p>Down: the stack grows by one call per digit. Up: each call returns, and its answer is used by the call below. The depth here is the number of digits, so the stack uses O(digits) space.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Recursion vs loops</h2>
+  <p>Anything a loop does, recursion can do, and the other way round. Pick the one that reads more clearly.</p>
+<pre><code>// loop                                  // recursion
+function sumTo(n) {                      function sumTo(n) {
+  let s = 0;                               if (n === 0) return 0;
+  for (let i = 1; i &lt;= n; i++) s += i;     return n + sumTo(n - 1);
+  return s;                              }
+}</code></pre>
+  <div class="table-wrap">
+  <table>
+    <tr><th></th><th>Loop</th><th>Recursion</th></tr>
+    <tr><td>extra space</td><td>O(1)</td><td>O(depth): one stack frame per waiting call</td></tr>
+    <tr><td>very deep inputs (n = 10⁶)</td><td>fine</td><td>stack overflow</td></tr>
+    <tr><td>shines at</td><td>walking a list once</td><td>problems that split into smaller copies: trees, nested arrays, divide and conquer, trying every option</td></tr>
+  </table>
+  </div>
+  <p class="callout"><strong>Stack space is real space.</strong> From Day 2: a recursion with depth n uses O(n) extra memory even if it creates no arrays, because every waiting call keeps its own variables on the stack.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Stack overflow</h2>
+<pre><code>function down(n) {
+  return down(n - 1);     // no base case!
+}
+down(5);   // RangeError: Maximum call stack size exceeded</code></pre>
+  <p>The stack has a limit, around <b>10,000 frames</b> in Node and browsers (it depends on the engine). You hit it in two ways:</p>
+  <ul>
+    <li>a <b>missing or unreachable base case</b>: the calls never stop (a bug), or</li>
+    <li>a <b>correct but very deep</b> recursion: <code>sumTo(100000)</code> overflows even though it is right. Use a loop, or make the depth O(log n) (next section).</li>
+  </ul>
+</section>
+
+<section class="card reveal">
+  <h2>6. Fast power: halve the exponent</h2>
+  <p>The obvious recursion <code>pow(b, e) = b × pow(b, e − 1)</code> makes e calls: O(e). But look:</p>
+<pre><code>3¹³ = 3⁶ × 3⁶ × 3     // e odd: square the half, times one more b
+3⁶  = 3³ × 3³         // e even: just square the half
+3³  = 3¹ × 3¹ × 3
+3¹  = 3⁰ × 3⁰ × 3
+3⁰  = 1               // base case</code></pre>
+  <p>Each call halves the exponent, so there are only about log₂ e calls: <b>O(log e)</b>. The one rule: compute the half <b>once</b>, store it in a variable, and multiply it by itself. Calling <code>pow(b, half)</code> twice would make two calls per level and lose the whole speed-up.</p>
+  <div id="power"></div>
+  <p>For e = 13: 5 calls and 7 multiplications instead of 13 calls. For e = 1,000,000,000: about 30 calls instead of a stack overflow.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Watch it run: two pointers, moved by recursion</h2>
+  <p>The two-pointer reverse from JS for DSA Day 5, but the pointers are <b>parameters</b> with default values: each call handles the two outer items, then hands the inside to a smaller call. No slicing, so no copies.</p>
+<pre><code>// A default value is used when the caller leaves the argument out.
+function greet(name = "friend") { return "hi " + name; }
+greet();          // "hi friend"
+greet("Ankit");   // "hi Ankit"</code></pre>
+  <p>So the first call <code>rev(a)</code> gets <code>lo = 0</code> and <code>hi = a.length - 1</code> for free, and every recursive call passes its own values. The caller never sees the extra parameters.</p>
+  <div id="pal"></div>
+  <p>Base case: when <code>lo &gt;= hi</code>, zero or one item is left, so there is nothing to do. Q7 (palindrome) uses exactly this shape. The difference: instead of swapping, it compares, and a mismatch lets it stop early.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary><code>const f = (n) =&gt; n &lt; 10 ? n : f(Math.floor(n / 10)); f(4721)</code></summary><div><p><code>4</code>. It keeps dropping the last digit until one digit is left: the first digit.</p></div></details>
+  <details class="predict"><summary><code>const g = (s) =&gt; s === "" ? "" : g(s.slice(1)) + s[0] + s[0]; g("ab")</code></summary><div><p><code>"bbaa"</code>. g("ab") = g("b") + "aa" = (g("") + "bb") + "aa".</p></div></details>
+  <details class="predict"><summary><code>const h = (n) =&gt; n === 0 ? 0 : h(n - 2) + 1; h(5)</code></summary><div><p><b>RangeError</b>: 5, 3, 1, −1, −3, ... never hits 0. The base case is unreachable for odd n.</p></div></details>
+  <details class="predict"><summary>How many calls does <code>powerFast(2, 16)</code> make (counting the base case)?</summary><div><p><b>6</b>: exponents 16, 8, 4, 2, 1, 0. That is log₂ 16 + 2.</p></div></details>
+  <details class="predict"><summary><code>function p(n) { if (n === 0) return; p(n - 1); console.log(n); } p(3)</code> prints?</summary><div><p><code>1, 2, 3</code>. The log runs <b>after</b> the call returns, so it happens on the way back up, deepest call first. Swap the two lines and you get 3, 2, 1.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where recursion takes you</h2>
+  <p>Recursion is the engine of half of DSA. Days 4–5 go further: recursion on arrays with an index, recursion trees with two calls per step, and memoization. Merge sort and quick sort (Days 8–9) are recursion that splits the array in half. Later, every tree and graph problem (depth-first search) and every "generate all combinations" problem (backtracking) is written this way.</p>
+  <p>Fast power is an interview classic ("implement pow(x, n)"), and its idea, <b>halve the problem and reuse the half</b>, is the same O(log n) you will meet again in binary search.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 3</code> after each one.</p>
+  <p><a href="../day-04/concept.html">Next: Day 4 · recursion on arrays and strings →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Shared helper: a call stack that records frames as the simulated recursion runs.
+  function makeStack(frames) {
+    const stack = [];
+    return {
+      stack,
+      snap(line, note, extra) {
+        const m = new Map(stack.map((s) => [s.label, s.state]));
+        frames.push(Object.assign({ line, note, map: m, mhi: stack.length ? stack[stack.length - 1].label : null }, extra || {}));
+      },
+      push(label) {
+        if (stack.length) stack[stack.length - 1].state = "waiting";
+        stack.push({ label, state: "running" });
+      },
+      top() { return stack[stack.length - 1]; },
+      pop() {
+        stack.pop();
+        if (stack.length) stack[stack.length - 1].state = "running";
+      },
+    };
+  }
+
+  // Trace 1: countEven(4627), the stack growing and the answers coming back.
+  (function () {
+    const frames = [];
+    const st = makeStack(frames);
+    let calls = 0;
+    function countEven(n) {
+      calls++;
+      st.push("countEven(" + n + ")");
+      st.snap(1, "countEven(" + n + ") is called and goes on top of the stack.", { vars: { n, calls } });
+      if (n === 0) {
+        st.top().state = "returns 0";
+        st.snap(2, "n is 0: base case. No digits left, so 0 even digits.", { vars: { n, calls } });
+        st.pop();
+        return 0;
+      }
+      const digit = n % 10;
+      const me = digit % 2 === 0 ? 1 : 0;
+      st.snap(3, "Last digit " + digit + " is " + (me ? "even: it counts 1" : "odd: it counts 0") + ". Now it needs countEven(" + Math.floor(n / 10) + ") and waits.", { vars: { n, digit, me, calls } });
+      const rest = countEven(Math.floor(n / 10));
+      const out = me + rest;
+      st.top().state = "returns " + out;
+      st.snap(5, "Back in countEven(" + n + "): the rest had " + rest + ", plus " + me + " for the digit " + digit + " = " + out + ".", { vars: { n, digit, me, rest, calls } });
+      st.pop();
+      return out;
+    }
+    st.push("main");
+    st.snap(7, "Start: only main is on the stack.", { vars: { calls } });
+    const r = countEven(4627);
+    st.snap(7, "Back in main: r = " + r + " (the digits 4, 6 and 2). " + calls + " calls in total: one per digit, plus the base case.", { vars: { r, calls } });
+    Lesson.trace("#stack", {
+      title: "countEven(4627)",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function countEven(n) {",
+        "  if (n === 0) return 0;          // base case",
+        "  const digit = n % 10;",
+        "  const me = digit % 2 === 0 ? 1 : 0;",
+        "  return me + countEven(Math.floor(n / 10));",
+        "}",
+        "const r = countEven(4627);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: fast power pow(3, 13), halving the exponent.
+  (function () {
+    const frames = [];
+    const st = makeStack(frames);
+    const b = 3;
+    const chain = [];
+    for (let e = 13; ; e = Math.floor(e / 2)) { chain.push(e); if (e === 0) break; }
+    let mults = 0, calls = 0;
+    const done = {};
+    const view = (e, extra) => {
+      const h = Object.assign({}, done);
+      const k = chain.indexOf(e);
+      if (k >= 0) h[k] = "active";
+      return Object.assign({ cells: chain, hi: h, ptrs: k >= 0 ? { e: k } : {} }, extra || {});
+    };
+    function pow(e) {
+      calls++;
+      st.push("pow(3, " + e + ")");
+      st.snap(1, "pow(3, " + e + ") is called. The exponent row shows the path: 13 → 6 → 3 → 1 → 0.", view(e, { vars: { b, e, mults, calls } }));
+      if (e === 0) {
+        st.top().state = "returns 1";
+        done[chain.indexOf(e)] = "found";
+        st.snap(2, "e is 0: base case, 3⁰ = 1. Now the answers come back up.", view(e, { vars: { b, e, mults, calls } }));
+        st.pop();
+        return 1;
+      }
+      const he = Math.floor(e / 2);
+      st.snap(3, "Halve the exponent: ⌊" + e + " / 2⌋ = " + he + ". Ask for pow(3, " + he + ") ONCE and wait.", view(e, { vars: { b, e, mults, calls } }));
+      const half = pow(he);
+      let out;
+      if (e % 2 === 0) {
+        out = half * half; mults += 1;
+        st.top().state = "returns " + out;
+        done[chain.indexOf(e)] = "done";
+        st.snap(4, e + " is even: 3^" + e + " = half × half = " + half + " × " + half + " = " + out + ". 1 multiplication.", view(e, { vars: { b, e, half, mults, calls } }));
+      } else {
+        out = half * half * b; mults += 2;
+        st.top().state = "returns " + out;
+        done[chain.indexOf(e)] = "done";
+        st.snap(5, e + " is odd: 3^" + e + " = half × half × 3 = " + half + " × " + half + " × 3 = " + out + ". 2 multiplications.", view(e, { vars: { b, e, half, mults, calls } }));
+      }
+      st.pop();
+      return out;
+    }
+    st.push("main");
+    st.snap(7, "Compute 3¹³. The slow way would make 13 calls and 13 multiplications.", { cells: chain, hi: {}, vars: { mults, calls } });
+    const r = pow(13);
+    const all = {};
+    chain.forEach((_, k) => (all[k] = "found"));
+    st.snap(7, "3¹³ = " + r + " with " + calls + " calls and " + mults + " multiplications. Calls grow like log₂ e, not like e.", { cells: chain, hi: all, vars: { r, mults, calls } });
+    Lesson.trace("#power", {
+      title: "powerFast(3, 13)",
+    stacked: true,
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function pow(b, e) {",
+        "  if (e === 0) return 1;              // base case",
+        "  const half = pow(b, Math.floor(e / 2)); // ONE call",
+        "  if (e % 2 === 0) return half * half;",
+        "  return half * half * b;",
+        "}",
+        "const r = pow(3, 13);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: reverse an array in place, with lo / hi as parameters.
+  (function () {
+    const frames = [];
+    const st = makeStack(frames);
+    const a = "stressed".split("");
+    const done = {};
+    function rev(lo, hi) {
+      st.push("rev(" + lo + ", " + hi + ")");
+      if (lo >= hi) {
+        st.top().state = "returns";
+        st.snap(2, "lo = " + lo + ", hi = " + hi + ": the pointers have met or crossed. Base case: nothing left to swap.", { cells: a.slice(), hi: Object.assign({}, done), ptrs: { lo, hi }, vars: { lo, hi } });
+        st.pop();
+        return;
+      }
+      st.snap(3, "Swap the two outer letters a[" + lo + "] = \"" + a[lo] + "\" and a[" + hi + "] = \"" + a[hi] + "\".", { cells: a.slice(), hi: Object.assign({}, done, { [lo]: "compare", [hi]: "compare" }), ptrs: { lo, hi }, vars: { lo, hi } });
+      [a[lo], a[hi]] = [a[hi], a[lo]];
+      done[lo] = "done"; done[hi] = "done";
+      st.snap(4, "Swapped. The ends are finished; the inside is a smaller copy of the same problem: rev(" + (lo + 1) + ", " + (hi - 1) + ").", { cells: a.slice(), hi: Object.assign({}, done), ptrs: { lo, hi }, vars: { lo, hi } });
+      rev(lo + 1, hi - 1);
+      st.top().state = "returns";
+      st.snap(4, "rev(" + (lo + 1) + ", " + (hi - 1) + ") is done, so rev(" + lo + ", " + hi + ") is done too. Nothing to combine: the work happened on the way down.", { cells: a.slice(), hi: Object.assign({}, done), ptrs: { lo, hi }, vars: { lo, hi } });
+      st.pop();
+    }
+    st.push("main");
+    st.snap(6, "a = \"stressed\" as 8 letters. lo starts at 0, hi at 7.", { cells: a.slice(), hi: {}, vars: {} });
+    rev(0, a.length - 1);
+    st.snap(6, "\"" + a.join("") + "\": reversed in place with 5 calls for 8 letters (n / 2 + 1). O(n) time, and the stack gets n / 2 deep.", { cells: a.slice(), hi: Object.fromEntries(a.map((_, i) => [i, "found"])), vars: {} });
+    Lesson.trace("#pal", {
+      title: "rev(\"stressed\") in place",
+      stacked: true,
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function rev(a, lo = 0, hi = a.length - 1) {",
+        "  if (lo >= hi) return;                  // base case",
+        "  [a[lo], a[hi]] = [a[hi], a[lo]];       // swap the ends",
+        "  rev(a, lo + 1, hi - 1);                // the inside",
+        "}",
+        "rev(a);",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

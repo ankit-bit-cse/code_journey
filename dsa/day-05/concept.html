@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recursion Trees and Memo</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 5</p>
+  <h1>Recursion trees and memoization</h1>
+  <p class="lede">When a function calls itself twice, the calls grow into a tree, and the tree can explode. Today you watch it explode, then tame it with one small object that remembers answers.</p>
+  <nav class="daynav"><a href="../day-04/concept.html">← Day 4</a><a href="../day-06/concept.html">Day 6 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Two calls per step make a tree</h2>
+  <p>The Fibonacci numbers start 0, 1 and then each one is the sum of the two before it: 0, 1, 1, 2, 3, 5, 8, 13, … The definition turns straight into code:</p>
+<pre><code>function fib(n) {
+  if (n &lt; 2) return n;               // base cases: fib(0) = 0, fib(1) = 1
+  return fib(n - 1) + fib(n - 2);    // TWO recursive calls
+}</code></pre>
+  <p>Yesterday most functions made <b>one</b> call each, so the calls formed a chain. Here every call (except the base cases) makes <b>two</b>, so they form a <b>tree</b>:</p>
+<pre><code>                 fib(4)
+             /          \
+        fib(3)           fib(2)
+        /    \           /    \
+    fib(2)  fib(1)   fib(1)  fib(0)
+    /    \
+ fib(1) fib(0)</code></pre>
+  <p>The stack only ever holds <b>one path</b> from the top to a leaf, so the space is O(n). The <b>time</b> is the number of boxes in the tree, and that is the problem.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Watch it run: the call tree of fib(4)</h2>
+  <p>Each column is one call, in the order the calls happen; each row is a depth (row 0 is the first call). The coloured box is the call running now, yellow ones are waiting for their children, green ones have returned, and red ones are repeats: a question that was already answered earlier.</p>
+  <div id="fibtree"></div>
+  <p>9 calls to get the answer 3, and <code>fib(2)</code> was worked out twice from scratch. In bigger trees it gets much worse.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Counting the calls</h2>
+  <p>Let <code>calls(n)</code> be the number of calls <code>fib(n)</code> makes. It costs itself, plus everything its two children cost:</p>
+<pre><code>calls(0) = calls(1) = 1
+calls(n) = 1 + calls(n - 1) + calls(n - 2)</code></pre>
+  <div class="table-wrap"><table>
+    <tr><th>n</th><th>fib(n)</th><th>calls</th></tr>
+    <tr><td>5</td><td>5</td><td>15</td></tr>
+    <tr><td>10</td><td>55</td><td>177</td></tr>
+    <tr><td>20</td><td>6,765</td><td>21,891</td></tr>
+    <tr><td>30</td><td>832,040</td><td>2,692,537</td></tr>
+    <tr><td>40</td><td>102,334,155</td><td>331,160,281</td></tr>
+    <tr><td>50</td><td>12,586,269,025</td><td>about 40 billion (minutes)</td></tr>
+  </table></div>
+  <p>Each +10 on n multiplies the work by about 120. That is <b>exponential</b> growth, roughly O(2ⁿ) (more exactly about 1.6ⁿ). Yet there are only n + 1 different questions: <code>fib(0)</code> up to <code>fib(n)</code>. The tree asks them over and over.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Memoization: remember every answer</h2>
+  <p>Keep a <b>memo</b>: a place to write down each answer the first time you compute it. Before doing any work, look in the memo. JS for DSA Day 8's <code>Map</code> is perfect for it (a plain object works too):</p>
+<pre><code>function fib(n, memo = new Map()) {
+  if (memo.has(n)) return memo.get(n);   // 1. asked before? answer at once
+  if (n &lt; 2) return n;                   // 2. base cases
+  const ans = fib(n - 1, memo) + fib(n - 2, memo);
+  memo.set(n, ans);                      // 3. write it down
+  return ans;
+}</code></pre>
+  <p>Now <code>fib(k)</code> is computed once for each k. Every other time it is asked, it returns straight from the memo: a call with no children. About 2n calls in total: <b>O(n) time</b>.</p>
+  <p class="callout"><strong>Pass the same memo down.</strong> The default <code>memo = new Map()</code> runs only when the argument is missing, so the very first call makes the memo and every recursive call receives that same one. Forget to pass it (<code>fib(n - 1)</code>) and each call makes a brand-new empty memo: you are back to exponential.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: the memo fills up and cuts the tree</h2>
+  <p>The boxes are the memo: box k holds <code>fib(k)</code> once it is known. The first trip goes straight down the left side; on the way back up each answer is written down. After that, every second call is a <b>memo hit</b> and returns at once.</p>
+  <div id="memo"></div>
+  <p>11 calls for <code>fib(6)</code> instead of 25. For <code>fib(40)</code>: 79 calls instead of 331 million.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary>How many calls does plain <code>fib(3)</code> make?</summary><div><p><code>5</code>: fib(3), fib(2), fib(1), fib(0), and fib(1) again. calls(3) = 1 + calls(2) + calls(1) = 1 + 3 + 1.</p></div></details>
+  <details class="predict"><summary><code>const memo = { 0: 0 }; if (memo[0]) "hit"; else "miss";</code></summary><div><p><code>"miss"</code>! The stored answer is 0, and 0 is falsy. Test with <code>0 in memo</code> or <code>memo.has(0)</code>, which ask "is the key there?", not "is the value truthy?".</p></div></details>
+  <details class="predict"><summary><code>const m = {}; m[[2, 3]] = 7; Object.keys(m)</code></summary><div><p><code>["2,3"]</code>. Object keys are strings, and an array turns into <code>"2,3"</code>. That is why for two parameters we build the key ourselves: <code>`${r},${c}`</code>.</p></div></details>
+  <details class="predict"><summary>Memoized <code>fib(5)</code>, then (with the same memo) <code>fib(5)</code> again. How many calls the second time?</summary><div><p><code>1</code>. The answer is already in the memo, so the first line returns it.</p></div></details>
+  <details class="predict"><summary>How many moves for the Tower of Hanoi with 4 disks?</summary><div><p><code>15</code>. moves(n) = 2 × moves(n - 1) + 1, so 1, 3, 7, 15: it is 2ⁿ - 1.</p></div></details>
+</section>
+
+<section class="card reveal">
+  <h2>7. Counting ways: split on the last move</h2>
+  <p>"How many ways…" questions have a recursive answer when you ask <b>how the last move could have happened</b>. Say a frog crosses n stones, jumping 1 or 3 stones at a time. To land on stone n, its last jump came from stone n - 1 or from stone n - 3, and those are different ways:</p>
+<pre><code>ways(n) = ways(n - 1) + ways(n - 3)
+ways(0) = 1      // already there: one way (do nothing)
+ways(negative) = 0</code></pre>
+  <p>That is a recursion tree just like fib's, full of repeated questions, so it needs a memo too. Grids work the same with two numbers: the first move is either down or right, and each leaves a smaller grid. Their memo key is <code>`${r},${c}`</code>.</p>
+  <p class="callout"><strong>When does a memo help?</strong> Only when the same call (same arguments) happens more than once. In take/skip with a running sum, or in the Tower of Hanoi, nearly every call is different, so a memo just wastes memory.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Tower of Hanoi: trust the recursion</h2>
+  <p>Disks sit on peg A, biggest at the bottom. Move them all to another peg, one disk at a time, never putting a bigger disk on a smaller one. Don't plan every move. Think about the <b>biggest</b> disk only:</p>
+  <ol>
+    <li>it can only move when every other disk is out of the way, on the spare peg;</li>
+    <li>so: move the n - 1 smaller disks to the spare peg (a smaller Hanoi!), move the big one, then move the n - 1 back on top of it (another smaller Hanoi).</li>
+  </ol>
+  <p>Here are 3 disks going from A to <b>B</b>, using C as the spare. In the grid, column 0 is peg A, column 1 is peg B and column 2 is peg C; the bottom row is the bottom of each peg, and the number is the disk size.</p>
+  <div id="hanoi"></div>
+  <p>moves(n) = moves(n - 1) + 1 + moves(n - 1) = 2ⁿ - 1. With 64 disks, at one move a second, that is about 585 billion years.</p>
+</section>
+
+<section class="card reveal dsa">
+  <h2>memoization is the door to dynamic programming</h2>
+  <p>"Recursion + a memo" is called <b>top-down dynamic programming</b>, and it is one of the most asked interview topics: <i>Climbing Stairs</i>, <i>House Robber</i>, <i>Unique Paths</i>, <i>Coin Change</i>, <i>Decode Ways</i> all start from a recursion that splits on a choice, then add a memo. Phase 5 is all about it. Recursion trees also explain the cost of backtracking (Phase 4) and of merge sort (Day 8), whose tree has only log n levels.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 5</code> after each one.</p>
+  <p><a href="../day-06/concept.html">Next: Day 6 · bubble sort and selection sort →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: the call tree of plain fib(4), drawn as a grid (row = depth, column = call order).
+  (function () {
+    // First pass: simulate to find each call's column and depth.
+    const calls = [];
+    (function sim(n, depth) {
+      calls.push({ n, depth });
+      if (n < 2) return n;
+      return sim(n - 1, depth + 1) + sim(n - 2, depth + 1);
+    })(4, 0);
+    const rows = Math.max(...calls.map((c) => c.depth)) + 1, cols = calls.length;
+    const grid = Array.from({ length: rows }, () => new Array(cols).fill(" "));
+    const state = {};
+    const frames = [];
+    const seen = {};
+    let count = 0;
+    const snap = (line, note, vars) => {
+      const ghi = {};
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (grid[r][c] === " ") ghi[r + "," + c] = "dim";
+      Object.assign(ghi, state);
+      frames.push({ line, note, grid: grid.map((r) => r.slice()), ghi, vars: Object.assign({ calls: count }, vars || {}) });
+    };
+    snap(5, "Call fib(4). The grid is empty: no call has happened yet.");
+    let col = 0;
+    const parents = [];
+    function fib(n) {
+      const me = col++;
+      const { depth } = calls[me];
+      const key = depth + "," + me;
+      count++;
+      const repeat = seen[n];
+      seen[n] = true;
+      grid[depth][me] = "f" + n;
+      if (parents.length) state[parents[parents.length - 1]] = "compare";
+      if (n < 2) {
+        grid[depth][me] = "f" + n + "=" + n;
+        state[key] = repeat ? "bad" : "done";
+        snap(2, "fib(" + n + ") is a base case: return " + n + " at once." + (repeat ? " (fib(" + n + ") again: already asked before.)" : ""), { n });
+        return n;
+      }
+      state[key] = "active";
+      snap(3, "fib(" + n + ") is not a base case. It needs fib(" + (n - 1) + ") and fib(" + (n - 2) + "), and calls fib(" + (n - 1) + ") first." + (repeat ? " Wait: fib(" + n + ") was already worked out before! Same work again." : ""), { n });
+      parents.push(key);
+      const a = fib(n - 1);
+      state[key] = "active";
+      snap(3, "Back in fib(" + n + "): fib(" + (n - 1) + ") = " + a + ". Now the second call, fib(" + (n - 2) + ").", { n, "fib(n-1)": a });
+      const b = fib(n - 2);
+      parents.pop();
+      grid[depth][me] = "f" + n + "=" + (a + b);
+      state[key] = repeat ? "bad" : "done";
+      snap(3, "fib(" + n + ") = " + a + " + " + b + " = " + (a + b) + ". It returns to the call above it.", { n, "fib(n-1)": a, "fib(n-2)": b });
+      return a + b;
+    }
+    const ans = fib(4);
+    snap(5, "fib(4) = " + ans + " after " + count + " calls. The red boxes repeat work done earlier: fib(2) twice, fib(1) three times, fib(0) twice.", { answer: ans });
+    Lesson.trace("#fibtree", {
+      title: "plain fib(4): the call tree",
+      code: [
+        "function fib(n) {",
+        "  if (n < 2) return n;",
+        "  return fib(n - 1) + fib(n - 2);",
+        "}",
+        "fib(4);",
+      ],
+      stacked: true,
+      frames,
+    });
+  })();
+
+  // Trace 2: fib(6) with a Map memo. The boxes are memo slots 0..6, the chips are the call stack.
+  (function () {
+    const N = 6;
+    const memo = new Map();
+    const stack = [];
+    const frames = [];
+    let calls = 0;
+    const slots = () => Array.from({ length: N + 1 }, (_, k) => (memo.has(k) ? memo.get(k) : "·"));
+    const snap = (line, note, n, hiExtra, vars) => {
+      const hi = {};
+      for (let k = 0; k <= N; k++) if (memo.has(k)) hi[k] = "done";
+      Object.assign(hi, hiExtra || {});
+      frames.push({
+        line, note, cells: slots(), hi,
+        ptrs: n == null ? {} : { n },
+        map: new Map(stack.map((s) => [s.label, s.state])),
+        mhi: stack.length ? stack[stack.length - 1].label : null,
+        vars: Object.assign({ calls }, n == null ? {} : { n }, vars || {}),
+      });
+    };
+    function fib(n) {
+      calls++;
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "fib(" + n + ")", state: "running" });
+      if (memo.has(n)) {
+        stack[stack.length - 1].state = "memo hit: " + memo.get(n);
+        snap(2, "fib(" + n + ") is already in the memo: return " + memo.get(n) + " at once. No children, no work.", n, { [n]: "found" });
+        stack.pop();
+        if (stack.length) stack[stack.length - 1].state = "running";
+        return memo.get(n);
+      }
+      if (n < 2) {
+        stack[stack.length - 1].state = "base: " + n;
+        snap(3, "fib(" + n + ") is a base case: return " + n + ". (Base cases are cheap, so they are not written in the memo.)", n, { [n]: "active" });
+        stack.pop();
+        if (stack.length) stack[stack.length - 1].state = "running";
+        return n;
+      }
+      snap(4, "fib(" + n + ") is not in the memo yet. It must compute fib(" + (n - 1) + ") + fib(" + (n - 2) + ").", n, { [n]: "active" });
+      const ans = fib(n - 1) + fib(n - 2);
+      memo.set(n, ans);
+      stack[stack.length - 1].state = "returns " + ans;
+      snap(5, "fib(" + n + ") = " + ans + ". Write it in the memo: memo.set(" + n + ", " + ans + ").", n, { [n]: "found" });
+      stack.pop();
+      if (stack.length) stack[stack.length - 1].state = "running";
+      return ans;
+    }
+    stack.push({ label: "main", state: "running" });
+    snap(8, "Call fib(6) with a new, empty memo (· means \"not known yet\").", null);
+    const r = fib(N);
+    stack[0].state = "got " + r;
+    snap(8, "fib(6) = " + r + " with only " + calls + " calls. Every fib(k) was computed once; the rest were memo hits.", null, null, { answer: r });
+    Lesson.trace("#memo", {
+      title: "fib(6) with a memo",
+      stacked: true,
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function fib(n, memo = new Map()) {",
+        "  if (memo.has(n)) return memo.get(n);",
+        "  if (n < 2) return n;",
+        "  const ans = fib(n - 1, memo) + fib(n - 2, memo);",
+        "  memo.set(n, ans);",
+        "  return ans;",
+        "}",
+        "fib(6);",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: Tower of Hanoi, 3 disks from A to B using C.
+  (function () {
+    const pegs = { A: [3, 2, 1], B: [], C: [] };
+    const names = ["A", "B", "C"];
+    const H = 3;
+    const stack = [];
+    const frames = [];
+    let moves = 0;
+    const draw = () => {
+      const g = Array.from({ length: H }, () => [" ", " ", " "]);
+      names.forEach((p, c) => pegs[p].forEach((d, k) => { g[H - 1 - k][c] = d; }));
+      return g;
+    };
+    const snap = (line, note, moved) => {
+      const g = draw();
+      const ghi = {};
+      g.forEach((row, r) => row.forEach((v, c) => { if (v === " ") ghi[r + "," + c] = "dim"; }));
+      if (moved) {
+        const c = names.indexOf(moved);
+        ghi[H - pegs[moved].length + "," + c] = "active";
+      }
+      frames.push({
+        line, note, grid: g, ghi,
+        map: new Map(stack.map((s) => [s.label, s.state])),
+        mhi: stack.length ? stack[stack.length - 1].label : null,
+        vars: { moves },
+      });
+    };
+    function hanoi(n, from, to, via) {
+      if (n === 0) return;
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "hanoi(" + n + ", " + from + "→" + to + ")", state: "running" });
+      if (n > 1) snap(3, "To move " + n + " disks " + from + "→" + to + ": first move the top " + (n - 1) + " out of the way, " + from + "→" + via + ".");
+      hanoi(n - 1, from, via, to);
+      const d = pegs[from].pop();
+      pegs[to].push(d);
+      moves++;
+      stack[stack.length - 1].state = "moved disk " + d;
+      snap(4, "Move disk " + d + " from " + from + " to " + to + "." + (n > 1 ? " The " + (n - 1) + " smaller disk" + (n > 2 ? "s are" : " is") + " on " + via + ", out of the way." : ""), to);
+      if (n > 1) {
+        stack[stack.length - 1].state = "running";
+        snap(5, "Now put the " + (n - 1) + " smaller disk" + (n > 2 ? "s" : "") + " back on top: " + via + "→" + to + ".");
+      }
+      hanoi(n - 1, via, to, from);
+      stack.pop();
+      if (stack.length) stack[stack.length - 1].state = "running";
+    }
+    snap(1, "3 disks on A (3 is the biggest). Goal: all of them on B, using C as the spare.");
+    hanoi(3, "A", "B", "C");
+    snap(1, "Done in " + moves + " moves = 2³ - 1. Each disk only ever sat on a bigger one.");
+    Lesson.trace("#hanoi", {
+      title: "Hanoi: 3 disks, A → B",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function hanoi(n, from, to, via) {",
+        "  if (n === 0) return;",
+        "  hanoi(n - 1, from, via, to);",
+        "  move(from, to);  // biggest disk",
+        "  hanoi(n - 1, via, to, from);",
+        "}",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

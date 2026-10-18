@@ -1,4 +1,4 @@
-/* Shared styles for every js-for-dsa page.
+/* Shared styles for every lesson page (js-for-dsa/ and dsa/).
    Each day gets its own colour: lesson.js sets --h (a hue) from the day number. */
 :root {
   --h: 220;
