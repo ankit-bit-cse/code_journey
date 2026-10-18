@@ -1,7 +1,7 @@
 // JS for DSA · Day 4 · arrays: traversal and linear search
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Write every loop yourself (no includes or indexOf), and never change arr.
+// Run `./check.sh 4` to check. Write every loop yourself (no includes or indexOf), and never change arr.
 
 // Q1. Return the sum of all numbers in arr. An empty array sums to 0.
 // sumArray([3, 1, 4]) -> 8    sumArray([]) -> 0    sumArray([-2, 2]) -> 0

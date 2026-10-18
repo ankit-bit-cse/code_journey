@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Sort, Quickselect</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 9</p>
+  <h1>Quick sort and quickselect</h1>
+  <p class="lede">Pick one value, the pivot, and put it exactly where it belongs: smaller values to its left, the rest to its right. Do that again on each side and the array is sorted. Do it on just one side and you find the k-th smallest value in about O(n).</p>
+  <nav class="daynav"><a href="../day-08/concept.html">← Day 8</a><a href="../day-10/concept.html">Day 10 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Partition: one pass, one value placed for good</h2>
+  <p>Partitioning around a <b>pivot</b> means: rearrange the array so every value <b>less than</b> the pivot comes before it and every other value comes after it. The two sides don't have to be sorted. But the pivot itself is now in its <b>final sorted position</b>: exactly as many values are smaller than it as there are boxes to its left.</p>
+<pre><code>before:  [6, 2, 9, 1, 7, 3, 8, 4]      pivot = 4 (the last value)
+after:   [2, 1, 3, 4, 7, 9, 8, 6]
+          &lt; 4      ↑  &gt;= 4 (any order)
+                   4 is at index 3, where it will be in the sorted array</code></pre>
+</section>
+
+<section class="card reveal">
+  <h2>2. Watch it run: the Lomuto partition</h2>
+  <p>The <b>Lomuto</b> scheme takes the last value as the pivot and keeps a "small zone" at the front: <code>arr[lo..i-1]</code> holds the values found so far that are &lt; pivot. <code>j</code> scans; whenever it finds a small value, it swaps it to the end of the small zone and grows the zone. At the end, the pivot swaps in right after the small zone.</p>
+  <p>Green = small zone, orange = <code>arr[j]</code> being compared, blue = the pivot.</p>
+  <div id="lomuto"></div>
+  <p class="callout"><strong>Strictly less.</strong> Every question today uses <code>arr[j] &lt; pivot</code>, so values <b>equal</b> to the pivot end up on its right. With <code>&lt;=</code> you'd still get a valid partition, just a different one, and the tests expect this exact one.</p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Quick sort: partition, then recurse on both sides</h2>
+<pre><code>function sortRange(arr, lo, hi) {
+  if (lo &gt;= hi) return;                  // 0 or 1 values: already sorted
+  const p = partitionRange(arr, lo, hi); // pivot lands at p, for good
+  sortRange(arr, lo, p - 1);             // sort the values left of it
+  sortRange(arr, p + 1, hi);             // sort the values right of it
+}
+sortRange(arr, 0, arr.length - 1);</code></pre>
+  <p>Compare it with merge sort from Day 8:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th></th><th>Merge sort</th><th>Quick sort</th></tr>
+    <tr><td>the work</td><td>merge, <b>after</b> the recursive calls</td><td>partition, <b>before</b> the recursive calls</td></tr>
+    <tr><td>split</td><td>always exactly in half</td><td>wherever the pivot lands</td></tr>
+    <tr><td>time</td><td>O(n log n) always</td><td>O(n log n) on average, O(n²) worst</td></tr>
+    <tr><td>extra space</td><td>O(n)</td><td>O(log n) stack on average (in place)</td></tr>
+    <tr><td>stable?</td><td>yes</td><td>no</td></tr>
+  </table>
+  </div>
+</section>
+
+<section class="card reveal">
+  <h2>4. The worst case: sorted input</h2>
+  <p>A good pivot lands near the middle: two halves, log n levels, O(n log n), just like merge sort. But on an <b>already sorted</b> array, the last value is always the biggest. It lands at the end, the right side is empty, and the left side is only one value smaller. Watch the <code>comparisons</code> counter:</p>
+  <div id="worst"></div>
+  <p>(n−1) + (n−2) + … + 1 = n(n−1)/2 comparisons: <b>O(n²)</b>, and the recursion goes n calls deep. For 100,000 sorted values that's 5 billion comparisons, and a stack overflow.</p>
+  <p class="callout"><strong>The fix is a better pivot.</strong> Real implementations pick a <b>random</b> index as the pivot (swap it to the end, then do Lomuto as usual), or the median of the first, middle and last values. Then no particular input is reliably bad, and the expected time is O(n log n). Today we keep the last value so every answer is predictable.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Quickselect: only follow one side</h2>
+  <p>Want the k-th smallest value? In the sorted array it would sit at index <code>k - 1</code>. After one partition, the pivot is at its sorted index <code>p</code>. Compare:</p>
+<pre><code>p === k - 1   → the pivot IS the answer
+p &lt;  k - 1    → the answer is on the right: lo = p + 1
+p &gt;  k - 1    → the answer is on the left:  hi = p - 1</code></pre>
+  <p>Like binary search, but the "halves" come from partitions. Here we look for the 7th smallest (target index 6). Dimmed boxes have been thrown away:</p>
+  <div id="select"></div>
+  <p>On average the range halves each time: n + n/2 + n/4 + … ≈ 2n, so quickselect is <b>O(n)</b> on average. That beats sorting first (O(n log n)) when you only need one value.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Three-way partition: the Dutch national flag</h2>
+  <p>If there are only three values (0, 1, 2), one pass with three pointers sorts it in place:</p>
+<pre><code>[ 0 0 0 | 1 1 1 | ? ? ? ? | 2 2 2 ]
+          ↑       ↑       ↑
+         low     mid     high</code></pre>
+  <ul>
+    <li><code>arr[mid]</code> is 0: swap it with <code>arr[low]</code>; low++ and mid++.</li>
+    <li><code>arr[mid]</code> is 1: it's already in the 1s zone; mid++.</li>
+    <li><code>arr[mid]</code> is 2: swap it with <code>arr[high]</code>; high--. (Don't move mid: the value that came from high hasn't been looked at.)</li>
+  </ul>
+  <p>Stop when <code>mid &gt; high</code>: the unknown zone is empty. That's Q6. On Day 7 you counted then rewrote (two passes); this does it in one.</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Predict the output</h2>
+  <p>Work it out on paper first, then reveal.</p>
+  <details class="predict"><summary>Lomuto partition of <code>[3, 7, 1, 5]</code>: where does the pivot land?</summary><div><p>Index <code>2</code>, giving <code>[3, 1, 5, 7]</code>. Pivot 5: 3 is small (i = 1), 7 isn't, 1 is small (swap with 7, i = 2), then the pivot swaps with arr[2] = 7.</p></div></details>
+  <details class="predict"><summary>Lomuto partition of <code>[9, 8, 7, 1]</code>?</summary><div><p><code>[1, 8, 7, 9]</code>, pivot index 0. Nothing is &lt; 1, so the small zone stays empty and the pivot swaps with arr[0]. Notice 9 jumped from the front to the back: that kind of long jump is why quick sort is not stable.</p></div></details>
+  <details class="predict"><summary>How many comparisons does quick sort (last-value pivot) make on <code>[1, 2, 3, 4, 5]</code>?</summary><div><p><code>10</code> = 4 + 3 + 2 + 1. Every pivot is the biggest in its range, so each partition only removes one value.</p></div></details>
+  <details class="predict"><summary>On <code>[2, 2, 2, 2, 2]</code>, is quick sort fast?</summary><div><p>No: also 10 comparisons, the worst case. Nothing is <b>strictly</b> less than the pivot, so the pivot always lands at the front and one side is empty. (A three-way partition would finish in one pass.)</p></div></details>
+  <details class="predict"><summary>Quickselect for the 1st smallest of <code>[4, 3, 2, 1, 5]</code>: how many partitions?</summary><div><p>Pivot 5 lands at index 4 (too far right), then pivot 1 of <code>[4, 3, 2, 1]</code> lands at index 0, the target. <b>2 partitions.</b></p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where this shows up</h2>
+  <p><b>Interviews:</b> "k-th largest element in an array" (quickselect or a heap), "top k frequent elements", "sort colors" (Dutch flag), "move zeros", "segregate negatives and positives", "wiggle sort" all use partitioning. "Why is quick sort O(n²) on sorted input, and how do you fix it?" is a classic question.</p>
+  <p><b>Later topics:</b> Phase 2 (array and string patterns) leans on partition-style two pointers. Heaps (Phase 3) give another way to do top-k in O(n log k). Randomized algorithms, like the random pivot, come back in hashing.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. What's next</h2>
+  <p>That's the four sorting days done: bubble, selection, insertion, counting, merge and quick. You know what each costs and when each is the right tool. Next, three days of <b>binary search</b>, deeper than JS for DSA Day 10: exact templates, lower and upper bounds, tricky arrays, and searching over the answer itself.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. No <code>.sort()</code>, except in Q8. Run <code>./check.sh dsa 9</code> after each one.</p>
+  <p><a href="../index.html">All days →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Lomuto partition on arr[lo..hi], recording frames through `rec` (optional).
+  function lomuto(arr, lo, hi, rec) {
+    const pivot = arr[hi];
+    let i = lo;
+    for (let j = lo; j < hi; j++) {
+      const small = arr[j] < pivot;
+      if (rec) rec("compare", { i, j, pivot, small, v: arr[j] });
+      if (small) { [arr[i], arr[j]] = [arr[j], arr[i]]; i++; }
+      if (rec) rec("after", { i, j, pivot, small });
+    }
+    [arr[i], arr[hi]] = [arr[hi], arr[i]];
+    if (rec) rec("place", { i, pivot });
+    return i;
+  }
+
+  // Trace 1: one Lomuto partition, step by step.
+  (function () {
+    const arr = [6, 2, 9, 1, 7, 3, 8, 4];
+    const hiIdx = arr.length - 1;
+    const frames = [];
+    let comparisons = 0, swaps = 0;
+    const shade = (i, extra) => {
+      const h = {};
+      for (let k = 0; k < i; k++) h[k] = "done";
+      h[hiIdx] = "active";
+      return Object.assign(h, extra || {});
+    };
+    frames.push({ line: 2, cells: arr.slice(), hi: shade(0), ptrs: { i: 0 }, vars: { pivot: arr[hiIdx], i: 0, comparisons, swaps }, note: "pivot = the last value, " + arr[hiIdx] + ". i = 0: the small zone is empty." });
+    lomuto(arr, 0, hiIdx, (kind, s) => {
+      if (kind === "compare") {
+        comparisons++;
+        frames.push({ line: 4, cells: arr.slice(), hi: shade(s.i, { [s.j]: "compare" }), ptrs: { i: s.i, j: s.j }, vars: { pivot: s.pivot, i: s.i, j: s.j, comparisons, swaps }, note: "Is arr[" + s.j + "] = " + s.v + " < " + s.pivot + "? " + (s.small ? "Yes: it belongs in the small zone." : "No: leave it where it is, it's on the big side.") });
+      } else if (kind === "after" && s.small) {
+        swaps++;
+        frames.push({ line: 6, cells: arr.slice(), hi: shade(s.i, { [s.i - 1]: "found" }), ptrs: { i: s.i, j: s.j }, vars: { pivot: s.pivot, i: s.i, j: s.j, comparisons, swaps }, note: (s.i - 1 === s.j ? "i and j were on the same box, so the swap does nothing visible. " : "Swap arr[" + (s.i - 1) + "] and arr[" + s.j + "]. ") + "The small zone grows: i = " + s.i + "." });
+      } else if (kind === "place") {
+        swaps++;
+        const h = {};
+        for (let k = 0; k < s.i; k++) h[k] = "done";
+        h[s.i] = "found";
+        frames.push({ line: 9, cells: arr.slice(), hi: h, ptrs: { i: s.i }, vars: { pivot: s.pivot, i: s.i, comparisons, swaps }, note: "j has seen everything. Swap the pivot into arr[" + s.i + "], right after the small zone. " + s.pivot + " is now in its final sorted place." });
+      }
+    });
+    const p = arr.indexOf(4);
+    frames.push({ line: 10, cells: arr.slice(), hi: { [p]: "found" }, ptrs: { i: p }, vars: { pivotIndex: p, comparisons, swaps }, note: "Return " + p + ". Left of it: all < 4. Right of it: all >= 4 (not sorted, and that's fine). " + comparisons + " comparisons: one per value, O(n)." });
+    Lesson.trace("#lomuto", {
+      stacked: true,
+      title: "Lomuto partition of [6, 2, 9, 1, 7, 3, 8, 4]",
+      code: [
+        "function partitionRange(arr, lo, hi) {",
+        "  const pivot = arr[hi]; let i = lo;",
+        "  for (let j = lo; j < hi; j++) {",
+        "    if (arr[j] < pivot) {",
+        "      [arr[i], arr[j]] = [arr[j], arr[i]];",
+        "      i++;",
+        "    }",
+        "  }",
+        "  [arr[i], arr[hi]] = [arr[hi], arr[i]];",
+        "  return i;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: quick sort on sorted input, one frame per partition, counting comparisons.
+  (function () {
+    const arr = [1, 2, 3, 4, 5, 6];
+    const frames = [];
+    const stack = [];
+    const placed = {};
+    let comparisons = 0;
+    const view = (lo, hi, extra) => {
+      const h = Object.assign({}, placed);
+      for (let k = lo; k <= hi; k++) if (!(k in placed)) h[k] = "active";
+      return Object.assign(h, extra || {});
+    };
+    const map = () => new Map(stack.map((s) => [s.label, s.state]));
+    function sortRange(lo, hi) {
+      if (stack.length) stack[stack.length - 1].state = "waiting";
+      stack.push({ label: "sortRange(" + lo + ", " + hi + ")", state: "running" });
+      const top = () => stack[stack.length - 1].label;
+      if (lo >= hi) {
+        if (lo === hi) placed[lo] = "done";
+        stack[stack.length - 1].state = "base case";
+        frames.push({ line: 2, cells: arr.slice(), hi: view(lo, hi), ptrs: lo === hi ? { lo, hi } : {}, map: map(), mhi: top(), vars: { lo, hi, comparisons }, note: lo > hi ? "sortRange(" + lo + ", " + hi + ") is empty: nothing to do. This is the empty side of the last partition." : "One value left: base case." });
+      } else {
+        const before = comparisons;
+        const p = lomuto(arr, lo, hi, (kind) => { if (kind === "compare") comparisons++; });
+        placed[p] = "found";
+        stack[stack.length - 1].state = "pivot at " + p;
+        frames.push({ line: 3, cells: arr.slice(), hi: view(lo, hi), ptrs: { lo, p, hi }, map: map(), mhi: top(), vars: { lo, hi, p, comparisons }, note: "Partition " + lo + ".." + hi + ": pivot " + arr[p] + " is the biggest, so it stays at " + p + ". That cost " + (comparisons - before) + " comparisons. Left side: " + (p - lo) + " values. Right side: " + (hi - p) + "." });
+        placed[p] = "done";
+        sortRange(lo, p - 1);
+        sortRange(p + 1, hi);
+      }
+      stack.pop();
+      if (stack.length) stack[stack.length - 1].state = "running";
+    }
+    stack.push({ label: "main", state: "running" });
+    frames.push({ line: 6, cells: arr.slice(), hi: {}, ptrs: {}, map: map(), mhi: "main", vars: { comparisons }, note: "Quick sort on an array that's already sorted. You'd hope it's instant." });
+    sortRange(0, arr.length - 1);
+    frames.push({ line: 6, cells: arr.slice(), hi: placed, ptrs: {}, map: map(), mhi: "main", vars: { comparisons }, note: comparisons + " comparisons = 5 + 4 + 3 + 2 + 1 = n(n-1)/2, and the stack went 6 calls deep. Every split was as lopsided as possible: O(n²)." });
+    Lesson.trace("#worst", {
+      stacked: true,
+      title: "Quick sort on sorted [1, 2, 3, 4, 5, 6]",
+      mapLabel: "call stack (bottom → top)",
+      code: [
+        "function sortRange(arr, lo, hi) {",
+        "  if (lo >= hi) return;",
+        "  const p = partitionRange(arr, lo, hi);",
+        "  sortRange(arr, lo, p - 1);",
+        "  sortRange(arr, p + 1, hi);",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: quickselect narrowing down to the 7th smallest.
+  (function () {
+    const arr = [7, 2, 9, 4, 1, 8, 3, 6, 5];
+    const k = 7, target = k - 1;
+    const frames = [];
+    let lo = 0, hi = arr.length - 1, work = 0, partitions = 0;
+    const shade = (extra) => {
+      const h = {};
+      arr.forEach((_, x) => { if (x < lo || x > hi) h[x] = "dim"; });
+      return Object.assign(h, extra || {});
+    };
+    frames.push({ line: 2, cells: arr.slice(), hi: shade(), ptrs: { lo, hi }, vars: { k, target, lo, hi, work }, note: "k = 7, so we want the value that would sit at index " + target + " after sorting. The whole array is still possible." });
+    while (true) {
+      const pivot = arr[hi];
+      frames.push({ line: 4, cells: arr.slice(), hi: shade({ [hi]: "active" }), ptrs: { lo, hi }, vars: { k, target, lo, hi, pivot, work }, note: "Partition " + lo + ".." + hi + " around the last value, " + pivot + ". That scans " + (hi - lo) + " values." });
+      const size = hi - lo;
+      const p = lomuto(arr, lo, hi);
+      work += size;
+      partitions++;
+      if (p === target) {
+        frames.push({ line: 5, cells: arr.slice(), hi: shade({ [p]: "found" }), ptrs: { lo, p, hi }, vars: { k, target, lo, hi, p, work }, note: pivot + " landed at index " + p + ", which IS the target. The 7th smallest is " + pivot + ". " + partitions + " partitions, " + work + " values scanned in total; sorting would cost more." });
+        break;
+      }
+      frames.push({ line: 4, cells: arr.slice(), hi: shade({ [p]: "compare" }), ptrs: { lo, p, hi }, vars: { k, target, lo, hi, p, work }, note: pivot + " landed at index " + p + ". " + (p < target ? p + " < " + target + ": the answer is to its right." : p + " > " + target + ": the answer is to its left.") });
+      if (p < target) {
+        lo = p + 1;
+        frames.push({ line: 6, cells: arr.slice(), hi: shade(), ptrs: { lo, hi }, vars: { k, target, lo, hi, work }, note: "Throw away everything up to " + p + ": lo = " + lo + ". Only " + (hi - lo + 1) + " values left." });
+      } else {
+        hi = p - 1;
+        frames.push({ line: 7, cells: arr.slice(), hi: shade(), ptrs: { lo, hi }, vars: { k, target, lo, hi, work }, note: "Throw away everything from " + p + " on: hi = " + hi + ". Only " + (hi - lo + 1) + " values left." });
+      }
+    }
+    Lesson.trace("#select", {
+      stacked: true,
+      title: "7th smallest of [7, 2, 9, 4, 1, 8, 3, 6, 5]",
+      code: [
+        "function kthSmallest(arr, k) {",
+        "  let lo = 0, hi = arr.length - 1; const target = k - 1;",
+        "  while (true) {",
+        "    const p = partitionRange(arr, lo, hi);",
+        "    if (p === target) return arr[p];",
+        "    if (p < target) lo = p + 1;",
+        "    else hi = p - 1;",
+        "  }",
+        "}",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

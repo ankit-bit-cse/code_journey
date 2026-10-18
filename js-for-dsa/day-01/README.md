@@ -58,7 +58,7 @@ Digits are the first "loop until the problem is empty" pattern. The number of st
 
 ## Questions
 
-Solve them in order in [`questions.js`](questions.js), then run `npm test`. Each stub has **Steps** comments: try without them first.
+Solve them in order in [`questions.js`](questions.js), then run `./check.sh 1`. Each stub has **Steps** comments: try without them first.
 
 | # | Function | Returns |
 |---|----------|---------|

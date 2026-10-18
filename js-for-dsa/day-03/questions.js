@@ -1,7 +1,7 @@
 // JS for DSA · Day 3 · functions, scope and helpers
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Use let and const, never var.
+// Run `./check.sh 3` to check. Use let and const, never var.
 
 // Q1. Return the bigger of a and b. Write it as an arrow function.
 // max2(3, 8) -> 8    max2(-1, -5) -> -1    max2(4, 4) -> 4

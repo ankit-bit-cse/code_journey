@@ -74,7 +74,7 @@ For n = 1,000,000: O(n²) is a trillion steps (too slow), O(n) is a million (fin
 
 ## Questions
 
-Solve them in order in [`questions.js`](questions.js), then run `npm test`. Each stub has **Steps** comments: try without them first.
+Solve them in order in [`questions.js`](questions.js), then run `./check.sh 2`. Each stub has **Steps** comments: try without them first.
 
 | # | Function | Returns |
 |---|----------|---------|

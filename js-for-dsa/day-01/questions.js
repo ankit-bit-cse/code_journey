@@ -1,7 +1,7 @@
 // JS for DSA · Day 1 · numbers, operators and digits
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Every n here is a whole number >= 0.
+// Run `./check.sh 1` to check. Every n here is a whole number >= 0.
 
 // Q1. Return the last digit of n.
 // lastDigit(472) -> 2    lastDigit(5) -> 5    lastDigit(0) -> 0

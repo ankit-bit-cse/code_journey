@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search the Answer</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 12</p>
+  <h1>Binary search on the answer</h1>
+  <p class="lede">The last day of Phase 1, and the most powerful binary search: there is no array to search. You search the <b>range of possible answers</b>, and at each <code>mid</code> you ask one yes/no question: <i>"is this enough?"</i></p>
+  <nav class="daynav"><a href="../day-11/concept.html">← Day 11</a><a href="../index.html">All days</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. When the answer is a number</h2>
+  <p>"What is the <b>smallest</b> reading speed that finishes the book in 6 hours?" There's no formula. But if someone hands you a guess, checking it is easy: add up the hours at that speed and compare with 6.</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>speed</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+    <tr><th>fast enough?</th><td>no</td><td>no</td><td>no</td><td>no</td><td><b>yes</b></td><td>yes</td><td>yes</td><td>yes</td></tr>
+  </table>
+  </div>
+  <p>That row is <b>monotonic</b>: once the answer is "yes", it stays "yes" (reading faster never takes longer). So it's exactly the "no, no, yes, yes" picture from <code>firstBadVersion</code> yesterday, and the answer is the <b>first yes</b>. Binary search finds it in O(log range) checks instead of trying 1, 2, 3, 4, ...</p>
+  <p class="callout"><strong>The whole trick:</strong> turn "find the best value" into "is this value good enough?". If that yes/no question is monotonic, binary search the answer.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. The template (smallest value that works)</h2>
+<pre><code>let lo = SMALLEST_POSSIBLE, hi = BIGGEST_POSSIBLE, ans = -1;
+while (lo &lt;= hi) {
+  const mid = Math.floor((lo + hi) / 2);
+  if (canDo(mid)) {
+    ans = mid;          // mid works: remember it...
+    hi = mid - 1;       // ...and try to find a SMALLER one
+  } else {
+    lo = mid + 1;       // mid doesn't work: so nothing below it does either
+  }
+}
+return ans;</code></pre>
+  <p>It's the "save the answer and keep going" search from Day 10, but the "array" is the numbers <code>lo..hi</code> and reading it is calling <code>canDo(mid)</code>. <b>Invariant: <code>ans</code> always works, and any better answer is inside [lo, hi].</b></p>
+</section>
+
+<section class="card reveal">
+  <h2>3. Watch it run: square root without Math.sqrt</h2>
+  <p>The simplest example: the square root of 13, rounded down, is the <b>largest</b> <code>r</code> with <code>r * r &lt;= 13</code>. The check is one multiplication. Since we want the largest, a "yes" means <i>try bigger</i>. Green = works, red = too big, grey = ruled out without checking.</p>
+  <div id="sqrt"></div>
+  <p>14 candidates, 4 checks. For n = 2,000,000,000 it would be about 31 checks; trying r = 0, 1, 2, ... one by one would take about 44,700.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. The recipe</h2>
+  <ol>
+    <li><b>What is the answer?</b> A whole number: a speed, a capacity, a day, a distance.</li>
+    <li><b>The range.</b> The smallest value it could possibly be (<code>lo</code>) and a value that surely works (<code>hi</code>). Usually the max, the min, or the sum of the input.</li>
+    <li><b>The check.</b> Write <code>canDo(x)</code> that answers yes/no, usually with one pass over the input, often greedy.</li>
+    <li><b>Is it monotonic?</b> If <code>x</code> works, does <code>x + 1</code> work too? (or <code>x - 1</code>, for "largest")</li>
+    <li><b>Search.</b> Smallest that works: on yes go left. Largest that works: on yes go right.</li>
+  </ol>
+  <p class="callout"><strong>Test <code>canDo</code> alone first.</strong> Almost every bug today is in the check, not the search. Run it by hand on the example for one value that should pass and one that should fail.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Watch it run: a feasibility check at every mid</h2>
+  <p>A book has chapters of <code>[9, 4, 7, 3]</code> pages. Each hour you read from <b>one</b> chapter, up to <code>speed</code> pages (a chapter of 9 pages at speed 4 takes 3 hours: 4 + 4 + 1). What's the smallest speed that finishes in 6 hours? The speeds 1..9 are the boxes; the chips show the check for the current <code>mid</code>.</p>
+  <div id="speed"></div>
+  <p>Each check costs one pass over the chapters, O(n), and there are O(log(max chapter)) checks, so it's <b>O(n log max)</b>. Q3, Q5 and (with a different check) Q4 and Q7 all have this shape.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Largest value that works: "maximize the minimum"</h2>
+  <p>Flip it around: "place 3 routers in these houses so the <b>closest two</b> are as far apart as possible." Now a <i>smaller</i> distance is easier, so the check row goes <code>yes, yes, yes, no, no</code> and we want the <b>last yes</b>: on yes, save it and go right (<code>lo = mid + 1</code>), just like the square root.</p>
+  <p>The check "can the routers all be at least <code>d</code> apart?" is <b>greedy</b>: put the first router in the first house (it never hurts to start as far left as possible), then walk right and put the next router in the first house that is at least <code>d</code> past the last one.</p>
+  <div id="greedy"></div>
+  <p>So 5 works and 6 doesn't: the answer is 5. The binary search over <code>d</code> decides which distances to check; the greedy pass answers each check in O(n).</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. How to spot it</h2>
+  <ul>
+    <li>"<b>Minimize the maximum</b> ..." (the largest part, the heaviest day) → smallest value that works.</li>
+    <li>"<b>Maximize the minimum</b> ..." (the closest distance, the smallest share) → largest value that works.</li>
+    <li>"the smallest speed / capacity / day / divisor such that ..." → smallest value that works.</li>
+    <li>The input is too big to try every answer, but checking <b>one</b> answer is a simple loop.</li>
+  </ul>
+  <p class="callout"><strong>Get the range right.</strong> A ship must at least carry the heaviest package, so <code>lo = max(weights)</code>, not 1 (with 1 the check would have to handle packages that never fit). And <code>hi = sum(weights)</code> always works: everything in one day. A wrong <code>lo</code> or <code>hi</code> is the second most common bug today.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. Predict the output</h2>
+  <p>Say the answer out loud first, then reveal.</p>
+  <details class="predict"><summary>Chapters <code>[9, 4, 7, 3]</code>, speed 3: how many hours?</summary><div><p><code>8</code>. Math.ceil(9/3) + Math.ceil(4/3) + Math.ceil(7/3) + Math.ceil(3/3) = 3 + 2 + 3 + 1.</p></div></details>
+  <details class="predict"><summary>Ship weights <code>[4, 1, 3, 2]</code> with capacity 5: how many days?</summary><div><p><code>2</code>. Day 1: 4 + 1 = 5. Day 2: 3 + 2 = 5. The packages stay in order, so you can't pair 4 with anything else.</p></div></details>
+  <details class="predict"><summary>sqrtFloor search on 0..10: what is the first <code>mid</code>, and is it a yes?</summary><div><p><code>5</code>, and no: 5 · 5 = 25 &gt; 10. So <code>hi = 4</code>, and half the range is gone with one multiplication.</p></div></details>
+  <details class="predict"><summary>"Is a speed of 0 fast enough?" Why does Koko's range start at 1?</summary><div><p>At speed 0 she never finishes, and <code>Math.ceil(p / 0)</code> is <code>Infinity</code>. The smallest speed that could possibly work is 1.</p></div></details>
+  <details class="predict"><summary>Routers in houses <code>[1, 2, 3]</code>, 3 routers: the best smallest distance?</summary><div><p><code>1</code>. Every house gets a router, so the closest two are 1 apart. With as many routers as houses, there's no choice to make.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where this shows up</h2>
+  <p>"Koko eating bananas", "capacity to ship packages", "split array largest sum", "magnetic force between balls" (that's aggressive cows), "minimum days to make bouquets", "allocate minimum pages", "painters' partition": all one pattern. When a problem says <b>minimize the maximum</b> or <b>maximize the minimum</b>, try binary search on the answer first. Later, the same idea speeds up other algorithms whenever "is X possible?" is easier than "what is the best X?".</p>
+</section>
+
+<section class="card reveal">
+  <h2>9. Phase 1 is done</h2>
+  <p>In 12 days you went from counting steps to designing searches:</p>
+  <ul>
+    <li><b>Big-O:</b> counting steps, space, and what built-ins really cost.</li>
+    <li><b>Recursion:</b> the call stack, recursion on arrays, recursion trees and memoization.</li>
+    <li><b>Sorting:</b> bubble, selection, insertion, counting, merge sort and quick sort (and quickselect).</li>
+    <li><b>Binary search:</b> templates and invariants, tricky arrays, and searching the answer itself.</li>
+  </ul>
+  <p><b>Next, Phase 2: array and string patterns.</b> Two pointers and sliding windows in depth (fixed and variable size), prefix sums and difference arrays, hashing patterns, Kadane's algorithm for subarrays, intervals, and string techniques, each with the interview problems that use them. Everything you built here (complexity, recursion, sorting, binary search) is a tool you'll reach for there.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. Run <code>./check.sh dsa 12</code> after each one.</p>
+  <p><a href="../index.html">All days →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: sqrtFloor(20) by binary search on 0..20.
+  (function () {
+    const n = 13;
+    const cells = Array.from({ length: n + 1 }, (_, i) => i);
+    const frames = [];
+    const checked = {};
+    let lo = 0, hi = n, ans = 0, checks = 0;
+    const shade = (extra) => {
+      const h = {};
+      cells.forEach((v) => { if (v < lo || v > hi) h[v] = "dim"; });
+      return Object.assign(h, checked, extra || {});
+    };
+    frames.push({ line: 1, cells, hi: shade(), ptrs: { lo, hi }, vars: { n, lo, hi, ans, checks }, note: "The answer r is somewhere in 0.." + n + ". ans = 0 is a safe start: 0 · 0 = 0 ≤ " + n + "." });
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      checks++;
+      frames.push({ line: 3, cells, hi: shade({ [mid]: "compare" }), ptrs: { lo, mid, hi }, vars: { n, lo, mid, hi, ans, checks, "mid * mid": mid * mid }, note: "mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + ". Check: " + mid + " · " + mid + " = " + mid * mid + "." });
+      if (mid * mid <= n) {
+        ans = mid;
+        lo = mid + 1;
+        checked[mid] = "found";
+        frames.push({ line: 5, cells, hi: shade(), ptrs: { lo, hi }, vars: { n, lo, mid, hi, ans, checks }, note: mid * mid + " ≤ " + n + ": " + mid + " works. Save it (ans = " + mid + ") and look for a BIGGER one: lo = " + lo + "." });
+      } else {
+        hi = mid - 1;
+        checked[mid] = "bad";
+        frames.push({ line: 7, cells, hi: shade(), ptrs: { lo, hi }, vars: { n, lo, mid, hi, ans, checks }, note: mid * mid + " > " + n + ": " + mid + " is too big, and so is everything above it. hi = " + hi + "." });
+      }
+    }
+    frames.push({ line: 10, cells, hi: Object.assign(shade(), { [ans]: "found" }), ptrs: { lo, hi }, vars: { n, lo, hi, ans, checks }, note: "lo (" + lo + ") passed hi (" + hi + "). The answer is ans = " + ans + ": " + ans + " · " + ans + " = " + ans * ans + " ≤ " + n + " but " + (ans + 1) + " · " + (ans + 1) + " = " + (ans + 1) * (ans + 1) + " is too big. " + checks + " checks." });
+    Lesson.trace("#sqrt", {
+      stacked: true,
+      title: "sqrtFloor(13)",
+      code: [
+        "let lo = 0, hi = n, ans = 0;",
+        "while (lo <= hi) {",
+        "  const mid = Math.floor((lo + hi) / 2);",
+        "  if (mid * mid <= n) {",
+        "    ans = mid; lo = mid + 1;   // works: try bigger",
+        "  } else {",
+        "    hi = mid - 1;              // too big",
+        "  }",
+        "}",
+        "return ans;",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: smallest reading speed for chapters [9, 4, 7, 3] within 6 hours, with the check shown per mid.
+  (function () {
+    const chapters = [9, 4, 7, 3], h = 6;
+    const maxC = Math.max(...chapters);
+    const cells = Array.from({ length: maxC }, (_, i) => i + 1); // speeds 1..9, speed s is at index s - 1
+    const frames = [];
+    const checked = {};
+    let lo = 1, hi = maxC, ans = -1, checks = 0;
+    const shade = (extra) => {
+      const hh = {};
+      cells.forEach((s, i) => { if (s < lo || s > hi) hh[i] = "dim"; });
+      return Object.assign(hh, checked, extra || {});
+    };
+    const unknown = Object.fromEntries(chapters.map((c) => [c + " pages", "?"]));
+    const P = (lo_, hi_, mid_) => Object.assign({ lo: lo_ - 1, hi: hi_ - 1 }, mid_ ? { mid: mid_ - 1 } : {});
+    frames.push({ line: 1, cells, hi: shade(), ptrs: P(lo, hi), vars: { h, lo, hi, ans, checks }, map: unknown, note: "Speed 1 is the slowest possible. Speed " + maxC + " (the longest chapter) surely works: one hour per chapter = 4 hours. So the answer is in 1.." + maxC + "." });
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      checks++;
+      frames.push({ line: 3, cells, hi: shade({ [mid - 1]: "compare" }), ptrs: P(lo, hi, mid), vars: { h, lo, mid, hi, ans, checks }, map: unknown, note: "mid = Math.floor((" + lo + " + " + hi + ") / 2) = " + mid + ". Is speed " + mid + " fast enough?" });
+      const per = {};
+      let total = 0;
+      chapters.forEach((c) => { const t = Math.ceil(c / mid); per[c + " pages"] = t + " h"; total += t; });
+      const ok = total <= h;
+      frames.push({ line: 4, cells, hi: shade({ [mid - 1]: ok ? "found" : "bad" }), ptrs: P(lo, hi, mid), vars: { h, lo, mid, hi, ans, checks, hours: total }, map: per, mhi: null, note: "At speed " + mid + ": " + chapters.map((c) => Math.ceil(c / mid)).join(" + ") + " = " + total + " hours. " + (ok ? total + " ≤ " + h + ": yes, it works!" : total + " > " + h + ": no, too slow.") });
+      if (ok) {
+        ans = mid;
+        hi = mid - 1;
+        checked[mid - 1] = "found";
+        frames.push({ line: 5, cells, hi: shade(), ptrs: P(lo, hi), vars: { h, lo, mid, hi, ans, checks, hours: total }, map: per, note: "Save it: ans = " + mid + ". A slower speed might work too, so search the left: hi = " + hi + "." });
+      } else {
+        lo = mid + 1;
+        checked[mid - 1] = "bad";
+        frames.push({ line: 7, cells, hi: shade(), ptrs: P(lo, hi), vars: { h, lo, mid, hi, ans, checks, hours: total }, map: per, note: "Too slow, and every slower speed is too slow as well. lo = " + lo + "." });
+      }
+    }
+    frames.push({ line: 10, cells, hi: Object.assign(shade(), { [ans - 1]: "found" }), ptrs: P(lo, hi), vars: { h, lo, hi, ans, checks }, map: Object.fromEntries(chapters.map((c) => [c + " pages", Math.ceil(c / ans) + " h"])), note: "lo passed hi. The smallest speed that works is " + ans + ", found with " + checks + " checks out of " + maxC + " possible speeds." });
+    Lesson.trace("#speed", {
+      stacked: true,
+      title: "Smallest speed for [9, 4, 7, 3] in 6 hours",
+      mapLabel: "hours per chapter at speed mid",
+      code: [
+        "let lo = 1, hi = Math.max(...chapters), ans = -1;",
+        "while (lo <= hi) {",
+        "  const mid = Math.floor((lo + hi) / 2);",
+        "  if (hoursAt(mid) <= h) {     // the check: one pass",
+        "    ans = mid; hi = mid - 1;     // works: try slower",
+        "  } else {",
+        "    lo = mid + 1;                // too slow: go faster",
+        "  }",
+        "}",
+        "return ans;",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: the greedy check canPlace(d) for d = 5 and d = 6, with 3 routers.
+  (function () {
+    const houses = [1, 3, 6, 9, 13, 14], routers = 3;
+    const frames = [];
+    const code = [
+      "function canPlace(d) {",
+      "  let placed = 1, last = houses[0];",
+      "  for (let i = 1; i < houses.length; i++) {",
+      "    if (houses[i] - last >= d) {",
+      "      placed++; last = houses[i];",
+      "    }",
+      "  }",
+      "  return placed >= routers;",
+      "}",
+    ];
+    [5, 6].forEach((d) => {
+      const hi = { 0: "found" };
+      let placed = 1, last = houses[0];
+      frames.push({ line: 2, cells: houses, hi: Object.assign({}, hi), ptrs: { i: 0 }, vars: { d, routers, placed, last }, note: "canPlace(" + d + "): the first router goes in the first house, at " + houses[0] + "." });
+      for (let i = 1; i < houses.length; i++) {
+        const gap = houses[i] - last;
+        if (gap >= d) {
+          placed++; last = houses[i]; hi[i] = "found";
+          frames.push({ line: 5, cells: houses, hi: Object.assign({}, hi), ptrs: { i }, vars: { d, routers, i, placed, last }, note: houses[i] + " - " + (houses[i] - gap) + " = " + gap + " ≥ " + d + ": put a router at " + houses[i] + ". placed = " + placed + "." });
+        } else {
+          frames.push({ line: 4, cells: houses, hi: Object.assign({}, hi, { [i]: "bad" }), ptrs: { i }, vars: { d, routers, i, placed, last }, note: houses[i] + " - " + last + " = " + gap + " < " + d + ": too close to the router at " + last + ". Skip this house." });
+        }
+      }
+      const ok = placed >= routers;
+      frames.push({ line: 8, cells: houses, hi: Object.assign({}, hi), vars: { d, routers, placed, "canPlace(d)": ok }, note: "Placed " + placed + " of " + routers + " routers: canPlace(" + d + ") is " + ok + "." + (ok ? " Distance " + d + " works, so try bigger." : " Distance " + d + " is too much.") });
+    });
+    Lesson.trace("#greedy", {
+      title: "canPlace(5), then canPlace(6)",
+      code,
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>

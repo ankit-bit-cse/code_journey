@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSA in JavaScript</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">After JS for DSA</p>
+  <h1>DSA in JavaScript</h1>
+  <p class="lede">Data structures and algorithms, one topic at a time, in five phases. Every day: an animated lesson, 8 scaffolded questions and <code>./check.sh dsa N</code>.</p>
+  <nav class="daynav"><a href="../js-for-dsa/index.html">← JS for DSA</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>How each day works</h2>
+  <ol>
+    <li><b>Concept (≈15 min):</b> open the day's lesson. Play every animation and answer the "predict the output" cards before revealing them. Teaching together? Press <b>Teach mode</b>.</li>
+    <li><b>Questions (≈25 min):</b> solve <code>dsa/day-NN/questions.js</code> in order. The <b>Steps</b> get shorter as the day goes on: by Q8 you only get the pattern and a hint.</li>
+    <li><b>Check (≈5 min):</b> <code>./check.sh dsa 1</code> for Day 1, <code>./check.sh dsa 2</code> for Day 2, and so on. Then commit and push.</li>
+  </ol>
+</section>
+
+<section class="card reveal">
+  <h2>1. Phase 1 · Foundations</h2>
+  <p>How to measure an algorithm, how to think recursively, how sorting really works, and binary search done properly.</p>
+</section>
+<ul class="days">
+  <li class="reveal"><a href="day-01/concept.html"><b>Day 1</b>Time complexity: counting steps<span>O(1), O(log n), O(n), O(n log n), O(n²): how to tell from the code</span></a></li>
+  <li class="reveal"><a href="day-02/concept.html"><b>Day 2</b>Space complexity and the cost of built-ins<span>extra memory, best / worst case, what <code>includes</code>, <code>shift</code> and <code>sort</code> really cost</span></a></li>
+  <li class="reveal"><a href="day-03/concept.html"><b>Day 3</b>Thinking recursively<span>base case, trusting the call, the call stack, fast power</span></a></li>
+  <li class="reveal"><a href="day-04/concept.html"><b>Day 4</b>Recursion on arrays and strings<span>passing an index, helper parameters, flattening, subsequences</span></a></li>
+  <li class="reveal"><a href="day-05/concept.html"><b>Day 5</b>Recursion trees and memoization<span>two calls per step, why naive Fibonacci explodes, Tower of Hanoi</span></a></li>
+  <li class="reveal"><a href="day-06/concept.html"><b>Day 6</b>Bubble sort and selection sort<span>passes, swaps, early exit, O(n²)</span></a></li>
+  <li class="reveal"><a href="day-07/concept.html"><b>Day 7</b>Insertion sort, stability, counting sort<span>shifting, stable vs unstable, comparators, O(n) counting</span></a></li>
+  <li class="reveal"><a href="day-08/concept.html"><b>Day 8</b>Merge sort<span>divide and conquer, merging, O(n log n), counting inversions</span></a></li>
+  <li class="reveal"><a href="day-09/concept.html"><b>Day 9</b>Quick sort and quickselect<span>partitioning, pivots, worst case, k-th smallest</span></a></li>
+  <li class="reveal"><a href="day-10/concept.html"><b>Day 10</b>Binary search templates<span>invariants, lower and upper bound, first and last occurrence</span></a></li>
+  <li class="reveal"><a href="day-11/concept.html"><b>Day 11</b>Binary search on tricky arrays<span>rotated arrays, peaks, 2D matrices</span></a></li>
+  <li class="reveal"><a href="day-12/concept.html"><b>Day 12</b>Binary search on the answer<span>"is X enough?": square roots, Koko, shipping packages</span></a></li>
+</ul>
+
+<section class="card reveal">
+  <h2>2. Phase 2 · Array and string patterns <small>(coming next)</small></h2>
+  <p>Prefix sums and Kadane · advanced two pointers (3-sum, container with most water) · variable sliding window · hashing patterns (group anagrams, subarray sum = k) · string problems.</p>
+</section>
+<section class="card reveal">
+  <h2>3. Phase 3 · Linear data structures</h2>
+  <p>Just-enough JS classes · linked lists (reverse, fast and slow pointers, cycles, merging) · stacks (valid parentheses, monotonic stack) · queues and deques.</p>
+</section>
+<section class="card reveal">
+  <h2>4. Phase 4 · Trees and graphs</h2>
+  <p>Binary trees and traversals · binary search trees · heaps and priority queues · backtracking · graphs (BFS, DFS, islands, topological sort, Dijkstra).</p>
+</section>
+<section class="card reveal">
+  <h2>5. Phase 5 · Problem-solving techniques</h2>
+  <p>Greedy (intervals, jump game) · dynamic programming (1D, then 2D: grid paths, LCS, knapsack) · bonus: bits, tries, union-find.</p>
+</section>
+
+</main>
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

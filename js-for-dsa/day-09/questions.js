@@ -1,7 +1,7 @@
 // JS for DSA · Day 9 · sorting, array methods and sliding window
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Unless a question says otherwise, do NOT change the input array.
+// Run `./check.sh 9` to check. Unless a question says otherwise, do NOT change the input array.
 
 // Q1. Return a new array with every number squared.
 // squares([1, 2, 3]) -> [1, 4, 9]    squares([]) -> []

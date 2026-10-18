@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insertion Sort, Stability</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+<header class="hero">
+  <p class="kicker">DSA · Phase 1 · Day 7</p>
+  <h1>Insertion sort, stability and sorting by keys</h1>
+  <p class="lede">Bubble and selection sort swap things around. Insertion sort sorts the way you sort cards in your hand: it shifts bigger cards aside and drops the new one into the gap. Today you'll also see why "stable" matters, sort objects by two keys, and sort without comparing at all.</p>
+  <nav class="daynav"><a href="../day-06/concept.html">← Day 6</a><a href="../day-08/concept.html">Day 8 →</a></nav>
+</header>
+
+<section class="card reveal">
+  <h2>1. Sorting the cards in your hand</h2>
+  <p>Your left hand holds cards that are already in order. You pick up the next card (call it <code>key</code>), slide every bigger card one place to the right, and put <code>key</code> into the gap that opens up.</p>
+<pre><code>for (let i = 1; i &lt; arr.length; i++) {
+  const key = arr[i];               // lift the card out: arr[i] is now a "hole"
+  let j = i - 1;
+  while (j &gt;= 0 &amp;&amp; arr[j] &gt; key) {
+    arr[j + 1] = arr[j];            // shift the bigger card right, into the hole
+    j--;
+  }
+  arr[j + 1] = key;                 // drop the card into the hole
+}</code></pre>
+  <p><b>Invariant:</b> at the start of every round, <code>arr[0..i-1]</code> is sorted. Round <code>i</code> makes <code>arr[0..i]</code> sorted, so after the last round everything is.</p>
+  <p class="callout"><strong>Shift, don't swap.</strong> A swap is three writes (temp, a, b). A shift is one write. The key is held in a variable the whole time and written only once, at the end.</p>
+</section>
+
+<section class="card reveal">
+  <h2>2. Watch it run: insertion sort</h2>
+  <p>Green boxes are the sorted left part, the blank box is the hole, and orange is the card being compared with <code>key</code>. Watch the <code>shifts</code> counter.</p>
+  <div id="insertion"></div>
+</section>
+
+<section class="card reveal">
+  <h2>3. Best case, worst case</h2>
+  <p>The work is all in the while loop, and the while loop runs once per shift. Every shift fixes exactly one pair of values that were in the wrong order (an <b>inversion</b>), so <b>shifts = inversions</b>.</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Input (n items)</th><th>Shifts</th><th>Time</th></tr>
+    <tr><td>already sorted <code>[1, 2, 3, 4]</code></td><td>0</td><td>O(n): one look per item</td></tr>
+    <tr><td>nearly sorted (a few items out of place)</td><td>a few</td><td>close to O(n)</td></tr>
+    <tr><td>random</td><td>about n²/4</td><td>O(n²)</td></tr>
+    <tr><td>reverse sorted <code>[4, 3, 2, 1]</code></td><td>1 + 2 + … + (n-1) = n(n-1)/2</td><td>O(n²)</td></tr>
+  </table>
+  </div>
+  <p>Extra space is O(1): only <code>key</code>, <code>i</code> and <code>j</code>. Compare with bubble sort on Day 6: both are O(n²), but on nearly sorted data insertion sort does almost nothing, which is why real sort libraries use it for small pieces.</p>
+</section>
+
+<section class="card reveal">
+  <h2>4. Stable vs unstable</h2>
+  <p>A sort is <b>stable</b> if items with <b>equal keys stay in the order they came in</b>. Below each card is a number (the key) and a letter (just a label, to tell twins apart). We sort by the number only.</p>
+<pre><code>input:     [2a, 1b, 2c, 1d]
+stable:    [1b, 1d, 2a, 2c]   // b before d, a before c: like the input
+unstable:  [1d, 1b, 2a, 2c]   // also sorted by number, but b and d swapped places</code></pre>
+  <p>Insertion sort is stable because it shifts only while <code>arr[j] &gt; key</code>: a card never jumps over an <b>equal</b> card. Watch <code>2c</code> stop behind <code>2a</code>:</p>
+  <div id="stable"></div>
+  <p class="callout"><strong>One character breaks it.</strong> Write <code>&gt;=</code> instead of <code>&gt;</code> and equal cards jump over each other: still sorted, no longer stable (and it does extra shifts for nothing). Selection sort from Day 6 is unstable for another reason: its long-distance swap can carry an item past its twin.</p>
+  <p>When does it matter? When you sort objects by one field and the existing order means something: sort a list of sign-ups by city and, within each city, they should still be first-come first-served. JavaScript's <code>arr.sort</code> is guaranteed stable.</p>
+</section>
+
+<section class="card reveal">
+  <h2>5. Comparators with several keys</h2>
+  <p>You met comparators in JS for DSA Day 9: return a negative number if <code>a</code> goes first, positive if <code>b</code> goes first, 0 for a tie. With two keys, compare the first key, and look at the second key <b>only on a tie</b>:</p>
+<pre><code>const people = [
+  { name: "Ravi", age: 30 }, { name: "Asha", age: 25 }, { name: "Dev", age: 30 },
+];
+const byAgeThenName = people.slice().sort((a, b) =&gt; {
+  if (a.age !== b.age) return a.age - b.age;   // first key: age
+  return a.name.localeCompare(b.name);          // tie: name A to Z
+});
+// Asha 25, Dev 30, Ravi 30</code></pre>
+  <p class="callout"><strong>Strings can't be subtracted.</strong> <code>"Dev" - "Ravi"</code> is <code>NaN</code>, and a comparator that returns NaN gives a garbage order. Use <code>a.localeCompare(b)</code>: negative, 0 or positive, just like <code>a - b</code>. And copy first with <code>slice()</code>: <code>sort</code> changes the array it is called on.</p>
+  <p>Descending on a key? Flip that one subtraction: <code>b.age - a.age</code>. Each key can go its own way.</p>
+</section>
+
+<section class="card reveal">
+  <h2>6. Counting sort: sorting without comparing</h2>
+  <p>Every sort so far compares two items at a time, and a comparison sort can never beat O(n log n). But if the values are small whole numbers, say 0 to 4, you don't need to compare: <b>count</b> how many of each value there are, then write them back out in order.</p>
+  <div id="counting"></div>
+  <p>Two passes: n steps to count, then k + n steps to write out (k = number of possible values). That's <b>O(n + k)</b> time and O(k) extra space. It's great for exam marks 0 to 100 or ages; it's hopeless for values up to a billion (a count array of a billion slots).</p>
+</section>
+
+<section class="card reveal">
+  <h2>7. Predict the output</h2>
+  <p>Work it out on paper first, then reveal.</p>
+  <details class="predict"><summary>How many shifts does insertion sort make on <code>[1, 2, 3, 4, 5]</code>? On <code>[5, 4, 3, 2, 1]</code>?</summary><div><p><code>0</code> and <code>10</code>. Sorted input never enters the while loop. Reverse sorted: the 4 shifts 1, the 3 shifts 2, the 2 shifts 3, the 1 shifts 4: 1 + 2 + 3 + 4 = 10 = 5 × 4 / 2.</p></div></details>
+  <details class="predict"><summary>How many shifts on <code>[2, 1, 4, 3]</code>?</summary><div><p><code>2</code>. Count the pairs in the wrong order: (2, 1) and (4, 3). One shift each.</p></div></details>
+  <details class="predict"><summary><code>["bb", "a", "ab"].sort((x, y) =&gt; x.length - y.length)</code></summary><div><p><code>["a", "bb", "ab"]</code>. "bb" and "ab" tie on length, and sort is stable, so they keep their input order. If you wanted "ab" first, you needed a second key.</p></div></details>
+  <details class="predict"><summary><code>[3, 1, 2].sort((a, b) =&gt; a &gt; b)</code></summary><div><p><code>[3, 1, 2]</code> in Node and Chrome: not sorted at all! The comparator returns <code>true</code>/<code>false</code>, which become 1 and 0, never a negative number, so it can never say "a goes first". Return <code>a - b</code>.</p></div></details>
+  <details class="predict"><summary>Counting sort of <code>[1, 0, 1, 1]</code> with maxValue 2: what is the count array?</summary><div><p><code>[1, 3, 0]</code>: one 0, three 1s, no 2s. Its length is maxValue + 1 = 3, so slot 2 exists even though no 2 appears.</p></div></details>
+</section>
+
+<section class="card reveal dsa">
+  <h2>where this shows up</h2>
+  <p><b>Interviews:</b> "sort colors" (0/1/2) is a classic; the counting answer is fine, and on Day 9 you'll do it in one pass. Two-key comparators come up all the time: sort intervals by start then end, sort by frequency then value, sort log lines by several fields. "Insert into a sorted list" is the inner step of many problems (and of keeping a running median).</p>
+  <p><b>Later topics:</b> TimSort, the algorithm behind most real <code>sort</code> functions, runs insertion sort on small chunks and then merges them, which is exactly tomorrow's topic. Counting is the base of bucket sort and radix sort. Shifts = inversions, and tomorrow you'll count inversions much faster with merge sort.</p>
+</section>
+
+<section class="card reveal">
+  <h2>8. What's next</h2>
+  <p>Every sort so far is O(n²) in the worst case. Tomorrow, <b>merge sort</b> breaks that barrier: split the array in half, sort each half (recursively, Days 3–5), and merge the two sorted halves in one pass. O(n log n), always.</p>
+</section>
+
+<footer>
+  <p>Now open <code>questions.js</code> and solve Q1–Q8 in order. No <code>.sort()</code>, except in Q4 and Q5. Run <code>./check.sh dsa 7</code> after each one.</p>
+  <p><a href="../index.html">All days →</a></p>
+</footer>
+
+</main>
+<script src="../../assets/lesson.js"></script>
+<script>
+  // Trace 1: insertion sort, simulated, with the hole shown as a blank box.
+  (function () {
+    const arr = [6, 3, 8, 2, 5, 1];
+    const frames = [];
+    let shifts = 0;
+    // view: the array with slot `hole` blank, sorted part (indices <= upTo, not the hole) green.
+    const view = (hole, upTo, extra) => {
+      const cells = arr.map((v, k) => (k === hole ? " " : v));
+      const hi = {};
+      for (let k = 0; k <= upTo; k++) if (k !== hole) hi[k] = "done";
+      if (hole != null) hi[hole] = "active";
+      return { cells, hi: Object.assign(hi, extra || {}) };
+    };
+    frames.push(Object.assign({ line: 2, ptrs: {}, vars: { shifts }, note: "Start: arr[0] = " + arr[0] + " on its own is already a sorted part. Rounds start at i = 1." }, view(null, 0)));
+    for (let i = 1; i < arr.length; i++) {
+      const key = arr[i];
+      let j = i - 1;
+      frames.push(Object.assign({ line: 3, ptrs: { i, j }, vars: { i, key, j, shifts }, note: "Round i = " + i + ": lift key = " + key + " out. Its slot is now a hole. Compare it with the sorted part, starting at j = " + j + "." }, view(i, i - 1)));
+      while (j >= 0 && arr[j] > key) {
+        const moved = arr[j];
+        arr[j + 1] = arr[j];
+        shifts++;
+        frames.push(Object.assign({ line: 6, ptrs: { i, j }, vars: { i, key, j, shifts }, note: "arr[" + j + "] = " + moved + " > " + key + ", so shift " + moved + " right into the hole. The hole moves to " + j + ". shifts = " + shifts + "." }, view(j, i, { [j + 1]: "compare" })));
+        j--;
+      }
+      arr[j + 1] = key;
+      const why = j < 0 ? "j = -1: nothing left to compare, key goes to the very front." : "arr[" + j + "] = " + arr[j] + " is not > " + key + ", so stop.";
+      frames.push(Object.assign({ line: 9, ptrs: { i, j: Math.max(j, -1) }, vars: { i, key, j, shifts }, note: why + " Drop " + key + " into the hole at j + 1 = " + (j + 1) + ". Now arr[0.." + i + "] is sorted." }, view(null, i, { [j + 1]: "found" })));
+    }
+    frames.push(Object.assign({ line: 11, ptrs: {}, vars: { shifts }, note: "Sorted, with " + shifts + " shifts. That is exactly the number of pairs that started in the wrong order. Reverse sorted, 6 items would need 15." }, view(null, arr.length - 1)));
+    Lesson.trace("#insertion", {
+      title: "Insertion sort on [6, 3, 8, 2, 5, 1]",
+      code: [
+        "function insertionSort(arr) {",
+        "  for (let i = 1; i < arr.length; i++) {",
+        "    const key = arr[i];",
+        "    let j = i - 1;",
+        "    while (j >= 0 && arr[j] > key) {",
+        "      arr[j + 1] = arr[j];   // shift",
+        "      j--;",
+        "    }",
+        "    arr[j + 1] = key;",
+        "  }",
+        "  return arr;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 2: insertion sort by number on labelled cards: equal numbers never pass each other.
+  (function () {
+    const arr = ["2a", "1b", "2c", "1d"];
+    const num = (c) => Number(c[0]);
+    const frames = [];
+    const view = (hole, upTo, extra) => {
+      const cells = arr.map((v, k) => (k === hole ? " " : v));
+      const hi = {};
+      for (let k = 0; k <= upTo; k++) if (k !== hole) hi[k] = "done";
+      if (hole != null) hi[hole] = "active";
+      return { cells, hi: Object.assign(hi, extra || {}) };
+    };
+    frames.push(Object.assign({ line: 1, ptrs: {}, vars: {}, note: "Sort by the number only. The letters show the input order: a, b, c, d." }, view(null, 0)));
+    for (let i = 1; i < arr.length; i++) {
+      const key = arr[i];
+      let j = i - 1;
+      frames.push(Object.assign({ line: 2, ptrs: { i, j }, vars: { i, key, j }, note: "Lift key = " + key + " (number " + num(key) + ")." }, view(i, i - 1)));
+      while (j >= 0 && num(arr[j]) > num(key)) {
+        const moved = arr[j];
+        arr[j + 1] = arr[j];
+        frames.push(Object.assign({ line: 5, ptrs: { i, j }, vars: { i, key, j }, note: num(moved) + " > " + num(key) + ": shift " + moved + " right." }, view(j, i, { [j + 1]: "compare" })));
+        j--;
+      }
+      arr[j + 1] = key;
+      let why = j < 0 ? "Nothing left: " + key + " goes to the front." : num(arr[j]) + " > " + num(key) + " is false, so stop.";
+      if (j >= 0 && num(arr[j]) === num(key)) why = arr[j] + " and " + key + " have the SAME number, and " + num(arr[j]) + " > " + num(key) + " is false: " + key + " stops behind " + arr[j] + ". That's what keeps it stable.";
+      frames.push(Object.assign({ line: 7, ptrs: { i, j: Math.max(j, -1) }, vars: { i, key, j }, note: why + " Drop " + key + " at " + (j + 1) + "." }, view(null, i, { [j + 1]: "found" })));
+    }
+    frames.push(Object.assign({ line: 7, ptrs: {}, vars: {}, note: "Result [" + arr.join(", ") + "]: b is still before d, and a is still before c. Stable. With >= in the while, 1d would have jumped over 1b." }, view(null, arr.length - 1)));
+    Lesson.trace("#stable", {
+      title: "Equal keys stay in order",
+      code: [
+        "for (let i = 1; i < arr.length; i++) {",
+        "  const key = arr[i];",
+        "  let j = i - 1;",
+        "  while (j >= 0 && num(arr[j]) > num(key)) {",
+        "    arr[j + 1] = arr[j]; j--;",
+        "  }",
+        "  arr[j + 1] = key;",
+        "}",
+      ],
+      frames,
+    });
+  })();
+
+  // Trace 3: counting sort: fill the count array, then write the values back out.
+  (function () {
+    const arr = [2, 4, 1, 4, 0, 2, 4];
+    const maxValue = 4;
+    const counts = new Array(maxValue + 1).fill(0);
+    const frames = [];
+    const cmap = () => { const m = {}; counts.forEach((c, v) => { m["counts[" + v + "]"] = c; }); return m; };
+    frames.push({ line: 1, cells: arr, map: cmap(), vars: { maxValue }, note: "Values are 0 to " + maxValue + ", so make " + (maxValue + 1) + " counters, all 0." });
+    const seen = {};
+    for (let i = 0; i < arr.length; i++) {
+      const v = arr[i];
+      counts[v]++;
+      seen[i] = "done";
+      frames.push({ line: 2, cells: arr, hi: Object.assign({}, seen, { [i]: "active" }), ptrs: { i }, map: cmap(), mhi: "counts[" + v + "]", vars: { i, v, maxValue }, note: "arr[" + i + "] = " + v + ": add one to counts[" + v + "], which is now " + counts[v] + ". No comparisons with other items." });
+    }
+    const sorted = [];
+    frames.push({ line: 3, cells: sorted.slice(), map: cmap(), vars: { "sorted.length": 0 }, note: "Counting done in one pass. Now forget arr: the counts alone say what the answer is. Build sorted from v = 0 up." });
+    for (let v = 0; v <= maxValue; v++) {
+      if (counts[v] === 0) {
+        frames.push({ line: 4, cells: sorted.slice(), hi: {}, map: cmap(), mhi: "counts[" + v + "]", vars: { v, "sorted.length": sorted.length }, note: "counts[" + v + "] = 0: no " + v + "s, so write nothing." });
+        continue;
+      }
+      for (let t = 0; t < counts[v]; t++) {
+        sorted.push(v);
+        frames.push({ line: 5, cells: sorted.slice(), hi: { [sorted.length - 1]: "found" }, map: cmap(), mhi: "counts[" + v + "]", vars: { v, "sorted.length": sorted.length }, note: "counts[" + v + "] = " + counts[v] + ": push " + v + (counts[v] > 1 ? " (" + (t + 1) + " of " + counts[v] + ")." : ".") });
+      }
+    }
+    const allDone = {}; sorted.forEach((_, k) => { allDone[k] = "done"; });
+    frames.push({ line: 6, cells: sorted, hi: allDone, map: cmap(), vars: { "sorted.length": sorted.length }, note: "Sorted: [" + sorted.join(", ") + "]. " + arr.length + " steps to count + " + (maxValue + 1) + " counters to walk = O(n + k)." });
+    Lesson.trace("#counting", {
+      stacked: true,
+      title: "Counting sort, values 0 to 4",
+      mapLabel: "counts",
+      code: [
+        "const counts = new Array(maxValue + 1).fill(0);",
+        "for (const v of arr) counts[v]++;",
+        "const sorted = [];",
+        "for (let v = 0; v <= maxValue; v++)",
+        "  for (let t = 0; t < counts[v]; t++) sorted.push(v);",
+        "return sorted;",
+      ],
+      frames,
+    });
+  })();
+</script>
+</body>
+</html>
