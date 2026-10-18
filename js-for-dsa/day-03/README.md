@@ -86,7 +86,7 @@ Big problems are solved by small helpers that each do one job: `isPerfect` is on
 
 ## Questions
 
-Solve them in order in [`questions.js`](questions.js), then run `npm test`. Each stub has **Steps** comments: try without them first.
+Solve them in order in [`questions.js`](questions.js), then run `./check.sh 3`. Each stub has **Steps** comments: try without them first.
 
 | # | Function | Returns |
 |---|----------|---------|

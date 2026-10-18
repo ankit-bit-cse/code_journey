@@ -1,7 +1,7 @@
 // JS for DSA · Day 5 · arrays in place: swap and two pointers
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. "In place" means: change the array you were given, don't build a new one.
+// Run `./check.sh 5` to check. "In place" means: change the array you were given, don't build a new one.
 
 // Q1. Swap the values at index i and index j. Change arr itself, then return arr.
 // swap([1, 2, 3], 0, 2) -> [3, 2, 1]    swap([5, 6], 1, 1) -> [5, 6]

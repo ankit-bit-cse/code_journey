@@ -8,7 +8,7 @@ Just enough JavaScript, understood properly, to start data structures and algori
 |------|------|------|
 | Concept | ≈15 min | open `day-NN/concept.html` in your browser: animated code you can play step by step, plus "predict the output" cards |
 | Questions | ≈25 min | solve `day-NN/questions.js` in order. Each question has **Steps** comments: try without them first |
-| Check | ≈5 min | `npm test`, then commit and push |
+| Check | ≈5 min | `./check.sh N` (N = the day), then commit and push |
 
 `day-NN/README.md` is the same concept in short, for reading on GitHub. Start from [`index.html`](index.html) (open it from your clone; GitHub shows HTML as source code).
 
@@ -29,10 +29,13 @@ Just enough JavaScript, understood properly, to start data structures and algori
 
 ## Running the tests
 
+From the repo folder:
+
 ```bash
-npm test                                        # everything, both tracks
-npm run test:dsa                                # only this track
-node --test js-for-dsa/day-04/questions.test.js # only one day
+./check.sh 1     # check Day 1 (use the day you're on)
+./check.sh       # check every day
 ```
+
+Run it after every question. (`npm test` still runs everything, both tracks.)
 
 As in the main track, an unsolved question is **skipped**, and a wrong answer **fails** and shows the expected value.

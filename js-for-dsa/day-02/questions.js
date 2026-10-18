@@ -1,7 +1,7 @@
 // JS for DSA · Day 2 · loops and counting steps
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Every n here is a whole number >= 0.
+// Run `./check.sh 2` to check. Every n here is a whole number >= 0.
 
 // Q1. Return 1 + 2 + ... + n. sumTo(0) is 0.
 // sumTo(4) -> 10    sumTo(1) -> 1    sumTo(0) -> 0

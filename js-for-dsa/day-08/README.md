@@ -63,7 +63,7 @@ Most "find the duplicate", "have I seen this?" and "count things" problems becom
 
 ## Questions
 
-Solve them in order in [`questions.js`](questions.js), then run `npm test`. Each stub has **Steps** comments: try without them first.
+Solve them in order in [`questions.js`](questions.js), then run `./check.sh 8`. Each stub has **Steps** comments: try without them first.
 
 | # | Function | Returns |
 |---|----------|---------|

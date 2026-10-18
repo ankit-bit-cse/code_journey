@@ -1,7 +1,7 @@
 // JS for DSA · Day 7 · objects as hash maps
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Use a plain object {} as your map today (Map and Set come on Day 8).
+// Run `./check.sh 7` to check. Use a plain object {} as your map today (Map and Set come on Day 8).
 
 // Q1. Count how many times each character appears in s. Return an object char -> count.
 // charFrequency("abca") -> { a: 2, b: 1, c: 1 }    charFrequency("") -> {}

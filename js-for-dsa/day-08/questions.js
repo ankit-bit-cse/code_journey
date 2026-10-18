@@ -1,7 +1,7 @@
 // JS for DSA · Day 8 · Map and Set
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Always return arrays, numbers or null, never a Map or Set itself.
+// Run `./check.sh 8` to check. Always return arrays, numbers or null, never a Map or Set itself.
 
 // Q1. Return a new array with the duplicates removed, keeping the order values were first seen.
 // unique([3, 1, 3, 2, 1]) -> [3, 1, 2]    unique([]) -> []

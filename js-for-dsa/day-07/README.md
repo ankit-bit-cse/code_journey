@@ -67,7 +67,7 @@ Looking up a key in an object takes about the same time no matter how big the ob
 
 ## Questions
 
-Solve them in order in [`questions.js`](questions.js), then run `npm test`. Each stub has **Steps** comments: try without them first.
+Solve them in order in [`questions.js`](questions.js), then run `./check.sh 7`. Each stub has **Steps** comments: try without them first.
 
 | # | Function | Returns |
 |---|----------|---------|

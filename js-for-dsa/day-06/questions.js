@@ -1,7 +1,7 @@
 // JS for DSA · Day 6 · strings
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. Write the loops yourself: no .reverse(), no regular expressions.
+// Run `./check.sh 6` to check. Write the loops yourself: no .reverse(), no regular expressions.
 
 // Q1. Return s backwards.
 // reverseString("abc") -> "cba"    reverseString("") -> ""

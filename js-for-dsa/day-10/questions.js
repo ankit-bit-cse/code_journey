@@ -1,7 +1,7 @@
 // JS for DSA · Day 10 · 2D arrays, recursion and binary search
 // Replace each `throw new Error("TODO")` with your code. Solve them in order.
 // The "Steps" comments are a scaffold: follow them if you're stuck.
-// Run `npm test` to check. A grid is an array of rows: grid[r][c] is row r, column c.
+// Run `./check.sh 10` to check. A grid is an array of rows: grid[r][c] is row r, column c.
 
 // Q1. Return a grid with `rows` rows and `cols` columns, every cell set to `value`.
 // makeGrid(2, 3, 0) -> [[0, 0, 0], [0, 0, 0]]    makeGrid(0, 5, 1) -> []
